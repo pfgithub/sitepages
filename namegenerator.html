@@ -1,10 +1,14 @@
+---
+title: Name Generator
+layout: default
+---
 
+<div id="page"></div>
+<button onclick="genthings(1000);">Next Page &gt;</button>
 
-<html><body><div id="page"></div>
-<button onclick="genthings(10000);">Next Page &gt;</button></body></html>
-
-<script>function letterfinder(letterrs){
-return letterrs.charAt(Math.floor(Math.random()*(letterrs.length - 1)));
+<script>
+function letterfinder(letterrs){
+	return letterrs.charAt(Math.floor(Math.random()*(letterrs.length - 1)));
 }
 
 function genthings(count){
@@ -20,7 +24,7 @@ function genthings(count){
 	}
 	document.getElementById("page").innerText = (ress.join("\n"));
 }
-genthings(1000);</script>
-
+genthings(1000);
+</script>
 
 <a href="/" style="position: fixed;top: 0;left: 0;">&lt; Homepage</a>
