@@ -1,0 +1,5 @@
+remote_theme: pfgithub/cayman
+custom_buttons:
+  -
+    title: View on Github
+    url: https://github.com/pfgithub/sitepages
