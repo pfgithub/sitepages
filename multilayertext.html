@@ -1,0 +1,54 @@
+
+<html>
+<head>
+<title>MultiLayer Text</title>
+</head>
+<body>
+<h1>Multilayer Text</h1>
+<div>
+Usage: Enter the top text into "top text" and the bottom text into "bottom text".
+</div>
+<div>
+You can use these characters in top text: "aeioucdhmrtvx". Not every character is supported
+</div>
+
+<div>
+Exͪaͫmͫpͫle:
+Top text: hmmm
+Bottom text: Example
+</div>
+<div>
+Jaͥmͣeͫs: Top text: Iam with a space before it Bottom text: James
+</div>
+<input id="top" placeholder="top text" /><br/>
+<input id="bottom" placeholder="bottom text" /><br/><br />
+<span id="output" > </span>
+<span id="error"></span>
+
+
+<script>
+function replace(top,bottom){
+let topreplace={a:"ͣ",e:"ͤ",i:"ͥ",o:"ͦ",u:"ͧ",c:"ͨ",d:"ͩ",h:"ͪ",m:"ͫ",r:"ͬ",t:"ͭ",v:"ͮ",x:"ͯ",I:"̍"}
+let error = [];
+top = top.split("").map(t => topreplace[t] || (t == " " ? undefined : (()=>{error.push(t); return "̚"})()     ));
+return bottom.split("").map((b,i) => top[i] ? b+top[i] : b).join("") + (error.length?("   Errors: "+error.join(", ")+" are not allowed at the top"):"");
+}
+
+function doreplace(){
+try{
+document.getElementById("error").innerText = "";
+document.getElementById("output").innerText = replace( document.getElementById("top").value, document.getElementById("bottom").value )
+}catch(e){document.getElementById("error").innerText = e.toString()}
+}
+
+document.getElementById("top").addEventListener("keyup", () => {
+
+doreplace();
+});
+document.getElementById("bottom").addEventListener("keyup", () => {
+
+doreplace();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+
+
+<html><body><div id="page"></div>
+<button onclick="genthings(10000);">Next Page &gt;</button></body></html>
+
+<script>function letterfinder(letterrs){
+return letterrs.charAt(Math.floor(Math.random()*(letterrs.length - 1)));
+}
+
+function genthings(count){
+	document.getElementById("page").innerText = "Loading...";
+	var ress = [];
+	for(var j = 0; j < count; j++){
+		var res = "";
+		for(var i = 0; i < (Math.floor(Math.random()*3)+2); i++){
+		res += letterfinder("aeiouy");
+		res += letterfinder("qwrtpsdfghjklzxcvbnm aeiouy");
+		}
+		ress.push(res);
+	}
+	document.getElementById("page").innerText = (ress.join("\n"));
+}
+genthings(10000);</script>
+
+
+<a href="/" style="position: fixed;top: 0;left: 0;">&lt; Homepage</a>

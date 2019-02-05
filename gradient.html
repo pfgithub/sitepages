@@ -1,0 +1,30 @@
+<div id="divid", style="font-family: monospace;white-space: pre-wrap;"></div>
+
+
+<script>function randomIntFromInterval(min,max){
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+function generateGradient(length, small,large){
+ var result = ""
+ var incr = 100 / length;
+ for(var i = 0; i < 100; i+=incr){
+  var rand = randomIntFromInterval(1,100);
+  if(i < rand) result += small;
+  else result += large;
+ }
+ return result;
+}
+
+var res = "";
+for(var i = 0; i < 10; i++){
+   res += (generateGradient(30,String.fromCharCode(32),String.fromCharCode(9617)));
+   res += (generateGradient(30,String.fromCharCode(9617),String.fromCharCode(9618)));
+   res += (generateGradient(30,String.fromCharCode(9618),String.fromCharCode(9619)));
+   res += (generateGradient(30,String.fromCharCode(9619),String.fromCharCode(9608))) + "\n";
+}
+document.getElementById("divid").innerText = res;
+console.log(res);
+</script>
+
+<a href="/" style="position: fixed;top: 0;left: 0;">&lt; Homepage</a>
