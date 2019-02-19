@@ -11,17 +11,36 @@ layout: default
 function letterfinder(letterrs){
 	return letterrs.charAt(Math.floor(Math.random()*(letterrs.length - 1)));
 }
+	
+function genName(){
+return (()=>{
+let r0toN = l=>Math.floor(Math.random() * l)
+function weightedRand(spec) {var i, j, table=[];for (i in spec) {for (j=0; j<spec[i]*10; j++) {table.push(i);}}return function() {return table[Math.floor(Math.random() * table.length)];}}
+let vowels = weightedRand({a:8.167,e:12.702,i:6.966,o:7.507,u:2.758});
+let consonants = weightedRand({b:1.492,c:2.782,d:4.253,f:2.228,g:2.015,h:6.094,j:0.153,k:0.772,l:4.025,m:2.406,n:6.749,p:1.929,q:0.095,r:5.987,s:6.327,t:9.056,v:0.978,w:2.360,x:0.150,y:1.974,z:0.074});
+let consonantsInRow = weightedRand({1:5,2:1,3:0.01});
+let vowelsInRow = weightedRand({1:5,2:1,3:0.01});
+let str = "";
+for(let i = 0; i < 3; i++){
+for(let j = 0; j < consonantsInRow(); j++) str += consonants();
+for(let j = 0; j < vowelsInRow(); j++) str += vowels();
+}
+return str;
+})()
+}
+function genNameSimple(){
+	var res = "";
+	for(var i = 0; i < (Math.floor(Math.random()*3)+2); i++){
+		res += letterfinder("aeiouy");
+		res += letterfinder("qwrtpsdfghjklzxcvbnm aeiouy");
+	}
+}
 
 function genthings(count){
 	document.getElementById("page").innerText = "Loading...";
 	var ress = [];
 	for(var j = 0; j < count; j++){
-		var res = "";
-		for(var i = 0; i < (Math.floor(Math.random()*3)+2); i++){
-		res += letterfinder("aeiouy");
-		res += letterfinder("qwrtpsdfghjklzxcvbnm aeiouy");
-		}
-		ress.push(res);
+		ress.push(genName());
 	}
 	document.getElementById("page").innerText = (ress.join("\n"));
 }
