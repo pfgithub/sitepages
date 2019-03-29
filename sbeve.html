@@ -8,23 +8,23 @@
 <div>sbeve finder, finds sbeve
 <input type="text" placeholder="(" id="open" value="(" />
   <input type="text" placeholder=")" id="close" value=")" /></div>
-<input type="text" placeholder="Search Term" id="searchterm" />
-<textarea placeholder="Source Text" id="sourcetext"></textarea>
+<input type="text" placeholder="Search Term" id="searchterm" value="he lied" />
+<textarea placeholder="Source Text" id="sourcetext">She believed</textarea>
   <p id="result"></p>
   </div>
   <script>
     
-    function findAcronym(text, word, open, close, regex){
+    function findAcronym(text, word, open, close){
 word = word.split``;
 let letter = word.shift();
 if(!letter)return text;
-let position = text.toLowerCase().search(new RegExp("\\b" + letter.toLowerCase()));
+let position = text.toLowerCase().indexOf(letter.toLowerCase());
 if(position === -1)return text;
 
 let before = text.substr(0, position);
 let after = text.substr(position + 1);
 
-return (before + open + letter + close + findAcronym(after, word.join``, open, close, regex)).split(open+close).join("");
+return (before + open + letter + close + findAcronym(after, word.join``, open, close)).split(close+open).join("");
 
 }
 
@@ -32,7 +32,7 @@ return (before + open + letter + close + findAcronym(after, word.join``, open, c
     function update(){
       document.getElementById("result").innerText = findAcronym(document.getElementById("sourcetext").value, document.getElementById("searchterm").value, document.getElementById("open").value, document.getElementById("close").value);
     }
-    document.body.addEventListener("keyup", update)
+    document.body.addEventListener("keyup", update);update()
     
   </script>
 
