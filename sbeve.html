@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>Sbeve Generator</title>
+</head>
+<body style="padding:0;margin:0;">
+
+  <div style="display:grid;grid-template-rows:auto auto 1fr 1fr;height:100vh;">
+<div>sbeve finder, finds sbeve
+<input type="text" placeholder="(" id="open" value="(" />
+  <input type="text" placeholder=")" id="close" value=")" /></div>
+<input type="text" placeholder="Search Term" id="searchterm" />
+<textarea placeholder="Source Text" id="sourcetext"></textarea>
+  <p id="result"></p>
+  </div>
+  <script>
+    
+    function findAcronym(text, word, open, close, regex){
+word = word.split``;
+let letter = word.shift();
+if(!letter)return text;
+let position = text.toLowerCase().search(new RegExp("\\b" + letter.toLowerCase()));
+if(position === -1)return text;
+
+let before = text.substr(0, position);
+let after = text.substr(position + 1);
+
+return (before + open + letter + close + findAcronym(after, word.join``, open, close, regex)).split(open+close).join("");
+
+}
+
+    
+    function update(){
+      document.getElementById("result").innerText = findAcronym(document.getElementById("sourcetext").value, document.getElementById("searchterm").value, document.getElementById("open").value, document.getElementById("close").value);
+    }
+    document.body.addEventListener("keyup", update)
+    
+  </script>
+
+</body>
+</html>
