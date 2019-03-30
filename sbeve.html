@@ -24,7 +24,7 @@ if(position === -1)return text;
 let before = text.substr(0, position);
 let after = text.substr(position + 1);
 
-return (before + open + letter + close + findAcronym(after, word.join``, open, close)).split(open+" "+close).join("").split(close+open).join("");
+return (before + open + letter + close + findAcronym(after, word.join``, open, close)).split(open+" "+close).join(" ").split(close+open).join("");
 
 }
 
