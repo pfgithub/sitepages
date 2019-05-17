@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Discord Minesweeper Generator | pfg.pw</title></head>
+
+<input type="number" placeholder="width" id="w" value=10 />
+<input type="number" placeholder="height" id="h" value=10 />
+<input type="number" placeholder="bombs" id="b" value=15 />
+
+Presets<select id="select">
+<option value='["` `", "`1`", "`2`", "`3`", "`4`", "`5`", "`6`", "`7`", "`8`", "`X`"]'>
+Plain
+</option>
+<option value='[" ` ` ", " `1` ", " `2` ", " `3` ", " `4` ", " `5` ", " `6` ", " `7` ", " `8` ", " `X` "]'>
+S p a c e d
+</option>
+<option value='["　", "１", "２", "３", "４", "５", "６", "７", "８", "Ｘ"]'>
+【Ｗｉｄｅ】
+</option>
+<option value='[":white_large_square:", ":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":boom:"]'>
+😂😂Emoji
+</option>
+<option value='custom'>
+Custom
+</option>
+
+
+</select>
+for custom:
+<input type="text" placeholder="0" id="0" />
+<input type="text" placeholder="1" id="1" />
+<input type="text" placeholder="2" id="2" />
+<input type="text" placeholder="3" id="3" />
+<input type="text" placeholder="4" id="4" />
+<input type="text" placeholder="5" id="5" />
+<input type="text" placeholder="6" id="6" />
+<input type="text" placeholder="7" id="7" />
+<input type="text" placeholder="8" id="8" />
+<input type="text" placeholder="X" id="9" />
+<br/>
+<textarea id="output" rows=25 columns=500>
+
+
+</textarea>
+
+<button id="gen">Generate</button>
+
+
+<script>
+
+
+
+let gen = (() => {
+let v = document.getElementById("select").value;
+let vals;
+
+if(v === "custom") {vals = [0,1,2,3,4,5,6,7,8,9].map(i=>document.getElementById(i).value)}
+else vals = JSON.parse(v);
+
+let w = +document.getElementById("w").value;
+let h = +document.getElementById("h").value;
+let b = +document.getElementById("b").value;
+
+let arr = [];
+for(let y = 0; y < h; y++){
+arr[y] = [];
+for(let x = 0; x < w; x++){
+arr[y][x] = 0;
+}
+}
+for(let _ = 0; _ < b; _++){
+arr[Math.floor(Math.random()*h)][Math.floor(Math.random()*w)] = 9;
+}
+for(let y = 0; y < h; y++){
+
+for(let x = 0; x < w; x++){
+let vta = arr[y][x] >= 9 ? 1 : 0;
+
+for(let t = Math.max(y-1,0); t <= Math.min(y+1,h-1); t++){
+for(let s = Math.max(x-1,0); s <= Math.min(x+1,w-1); s++){
+
+arr[t][s] += vta;
+}
+}
+}
+}
+
+return `.\n`+arr.map(el=>"||"+el.map(e=>vals[Math.min(e,9)]).join`||||`+"||").join`\n`;
+});
+
+document.getElementById("gen").addEventListener("click", e => {
+
+
+document.getElementById("output").value = gen();
+
+})
+document.getElementById("output").value = gen();
+
+</script>
+
+
+
+
+
+
+</html>
