@@ -1,5 +1,5 @@
 
 <pre id="jsonhere">javascript</pre>
 <script>
-document.getElementById("jsonhere", JSON.stringify(new URLSearchParams(location.query).get("json"), null, "\t"))
+document.getElementById("jsonhere").innerText = (JSON.stringify(new URLSearchParams(location.query).get("json"), null, "\t"))
 </script>
