@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+
+
+<html>
+<head>
+<title>Typing Speed Test</title>
+<style>
+#out{
+white-space:pre-wrap;
+}
+.word{
+font-family:monospace;
+}
+.word-untyped{
+color:darkgray;
+}
+.word-correct{
+color:darkgreen;
+font-weight:bold;
+}
+.word-incorrect{
+color:darkred;
+background-color:rgba(255,0,0,0.3);
+}
+
+
+</style>
+</head>
+<body>
+<div class="stats"><div id="time"></div><div id="wpm">...</div><div id="cpm">...</div><div id="err">...</div></div>
+<div id="out"></div>
+<textarea id="in"></textarea>
+
+<script>
+
+let sentence = `Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum`;
+
+
+let startTime = undefined;
+let errors = 0;
+
+const _in = document.getElementById("in");
+const out = document.getElementById("out");
+
+const wpm = document.getElementById("wpm");
+const cpm = document.getElementById("cpm");
+const err = document.getElementById("err");
+const time = document.getElementById("time");
+
+setInterval(() => {
+if(!startTime) {return;}
+let cTime = new Date().getTime();
+let dTime = cTime - startTime;
+let cpmval = (_in.value.length / (dTime / 1000 / 60));
+
+cpm.textContent = cpmval.toFixed(0) + " cpm";
+wpm.textContent = (cpmval / 5).toFixed(0) + " wpm";
+
+}, 100);
+
+
+let chars = sentence.split("");
+let charElems = chars.map(c => {
+
+const elem = document.createElement("span");
+elem.classList.add("word", "word-untyped"); // <-- allowed?
+
+elem.textContent = c;
+out.appendChild(elem);
+
+return elem;
+
+});
+
+let prevVal = [];
+
+_in.addEventListener("input", e => { // keyUp?
+
+if(!startTime) {startTime = new Date().getTime();}
+
+let curr = _in.value.split("");
+
+for(let i = 0; i < Math.max(curr.length, prevVal.length); i++){
+const v = curr[i];
+
+if(v !== prevVal[i]){
+
+let elem = charElems[i];
+if(!elem) {
+
+return;
+} // shouldn't happen unless you have won
+
+// aaa
+
+elem.classList.remove("word-untyped");
+elem.classList.remove("word-correct");
+elem.classList.remove("word-incorrect");
+
+if(v === undefined) {
+  elem.classList.add("word-untyped");
+  elem.textContent = chars[i];
+} else {
+  elem.classList.add(v === chars[i] ? "word-correct" : "word-incorrect"  )
+elem.textContent = v;
+}
+
+
+}
+
+}
+
+prevVal = curr;
+
+
+});
+
+</script>
+</body>
+</html>
