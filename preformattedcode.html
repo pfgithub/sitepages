@@ -17,7 +17,7 @@ let out = document.getElementById("out");
 let evhl = () => {
 let tab = " ".repeat(+elTabWidth.value);
 let code = elCode.value.split("\t").join(tab).split("\n");
-elCode.rows = Math.min(code.length, 5);
+elCode.rows = Math.max(code.length, 5);
 let longestLine = code.reduce((t,l) => Math.max(t, l.length), 0);
 out.textContent = code.map((l, i) => ` ${(i+1).toString().padStart(Math.floor(Math.log(code.length)) + 2, " ")} | ${l.padEnd(longestLine, " ")}  | `).join("\n");
 };
