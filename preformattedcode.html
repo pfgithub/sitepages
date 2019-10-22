@@ -3,11 +3,22 @@ title: MultiLayer Text
 layout: default
 ---
 
+<style>
+#page{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+}
+</style>
 
-<label>code: <textarea id="code" style="width:100%;"></textarea></label>
-<label>tab width: <input type="number" id="tabwidth" value="5" /></label>
+<div id="page">
+<div>
+<label>tab width: <input type="number" id="tabwidth" value="4" placeholder="4" /></label>
+<label>code: <textarea id="code" style="width:100%;" placeholder="code..."></textarea></label>
+</div>
+<div>
 <pre><code id="out"></code></pre>
-
+</div>
+</div>
 
 <script>
 let elCode = document.getElementById("code");
