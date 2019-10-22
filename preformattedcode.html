@@ -4,20 +4,25 @@ layout: default
 ---
 
 <style>
-#page{
+#content{
+  margin: 0;
+  gap: 25px;
   display:grid;
   grid-template-columns: 1fr 1fr;
 }
+@media all and (max-width: 874px) {
+#content{
+  grid-template-columns: 1fr;
+}
+}
 </style>
 
-<div id="page">
 <div>
 <label>tab width: <input type="number" id="tabwidth" value="4" placeholder="4" /></label>
 <label>code: <textarea id="code" style="width:100%;" placeholder="code..."></textarea></label>
 </div>
 <div>
 <pre><code id="out"></code></pre>
-</div>
 </div>
 
 <script>
