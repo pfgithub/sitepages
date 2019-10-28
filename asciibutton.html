@@ -1,0 +1,87 @@
+
+---
+title: Button Generator
+layout: default
+---
+
+<script>
+let nodeValue = Symbol("node");
+
+function setup(info, cb){
+let doUpdate = () => {
+let resValues = {};
+info.forEach(i => {
+let resValue = i.get ? i.get(i.node) : i.set ? {set: (v) => i.set(i.node, v)} : {};
+resValue[nodeValue] = i.node;
+resValues[i.name] = resValue;
+});
+cb(resValues);
+};
+info.forEach(i => {
+i.node = document.createElement(i.type);
+if(i.change) {i.change(i.node, () => {
+doUpdate();
+})}
+document.body.appendChild(i.node);
+});
+doUpdate();
+}
+
+let input = s => ({type: "input", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let textarea = s => ({type: "textarea", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let pre = s => ({type: "pre", name: s, mode: "set", set: (q,v) => q.textContent = v});
+
+
+setup([textarea("intext"), pre("outtext")], ({intext, outtext}) => {
+function measure(lines){
+return {h: lines.length, w: lines.reduce((t, l) => Math.max(t, l.length), 0)};
+}
+
+function renderText(text, transparentCharacter = "no"){
+let v = text.split("\n").map(l => l.split("").map(c => c === transparentCharacter ? undefined : c));
+let {w} = measure(v);
+return v.map(l => l.concat(new Array(w - l.length).fill(undefined)));
+}
+
+function renderOutline(description, content, {t = 1, l = 1, r  = 1, b = 1} = {}){
+let [topleft, top, topright, left, unused, right, bottomleft, bottom, bottomright] = description.split("");
+let size = measure(content);
+let lines = [];
+for(let i = 0; i < t; i++){
+lines.push([...new Array(l).fill(topleft), ...new Array(size.w).fill(top), ...new Array(r).fill(topright)]);
+}
+content.forEach(line => {
+lines.push([...new Array(l).fill(left), ...line, ...new Array(r).fill(right)]);
+});
+for(let i = 0; i < b; i++){
+lines.push([...new Array(l).fill(bottomleft), ...new Array(size.w).fill(bottom), ...new Array(r).fill(bottomright)]);
+}
+return lines;
+}
+
+function renderCopy(content){
+return content.map(l => l.map(q => q));
+}
+
+function renderOverlay(base, above, x, y, fillTransparency = false){ // above must be smaller than or the same size as base
+let copy = renderCopy(base);
+let {w, h} = measure(above);
+for(let ypos = y; ypos < h + y; ypos++){
+for(let xpos = x; xpos < w + x; xpos++){
+if(fillTransparency || above[y][x]) {copy[y][x] = above[y][x]}
+}
+}
+return copy;
+}
+
+function renderButton(content){
+return renderOutline(" _ | | ¯ ", renderOutline("         ", content, {t: 0, b: 0}));
+}
+
+function display(content, transparentCharacter = " "){
+return(content.map(l => l.map(q => q || transparentCharacter).join("")).join("\n"));
+}
+
+outtext.set(display(renderButton(renderText(intext))));
+});
+</script>
