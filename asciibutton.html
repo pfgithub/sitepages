@@ -3,6 +3,8 @@ title: Button Generator
 layout: default
 ---
 
+<div id="maincontent"></div>
+
 <script>
 let nodeValue = Symbol("node");
 
@@ -21,7 +23,7 @@ i.node = document.createElement(i.type);
 if(i.change) {i.change(i.node, () => {
 doUpdate();
 })}
-document.body.appendChild(i.node);
+document.getElementById("maincontent").appendChild(i.node);
 });
 doUpdate();
 }
