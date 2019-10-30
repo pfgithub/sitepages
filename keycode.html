@@ -1,0 +1,19 @@
+---
+title: Keycode
+layout: default
+---
+
+<ul id="ul"></ul>
+
+<script>
+
+let ul = document.getElementById("ul");
+
+window.addEventListener("keydown", (e) => {
+console.log(e);
+let li = document.createElement("li");
+li.appendChild(document.createTextNode(e.key));
+document.body.appendChild(li);
+})
+
+</script>
