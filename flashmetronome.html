@@ -3,6 +3,8 @@ title: Button Generator
 layout: default
 ---
 
+<div>press space</div>
+
 <script>
 
 let flash = document.createElement("div");
@@ -13,7 +15,7 @@ flash.style.position = "fixed"; flash.style.top = "0" ; flash.style.left = "0"; 
 flash.style.backgroundColor = "white";
 flash.style.zIndex = "9999999999999999"; // override all
 
-function bpm(){
+function dointerval(){
 if(window.bpm) clearInterval(window.bpm)
 window.bpm = setInterval(() => {
 flash.style.backgroundColor = "black";
@@ -23,7 +25,7 @@ setTimeout(() => {flash.style.backgroundColor = "white";}, 50);
 
 window.addEventListener("keydown", (e) => {
 // tap 2 bpm possibly. for now,
-if(e.key === " "){bpm();}
+if(e.key === " "){dointerval();}
 })
 
 </script>
