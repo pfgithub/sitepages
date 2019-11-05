@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>click recorder playback</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><!-- this would need buttons and pointerevents for mobile support -->
+</head>
+<body>
+<script>
+(() => {
+
+let css = document.createElement("style");
+css.appendChild(document.createTextNode(`
+.black{
+background-color:black;
+}
+
+`));
+document.head.appendChild(css);
+
+let state = document.createElement("div");
+document.body.appendChild(state);
+state.textContent = "click to start recording";
+
+let info = document.createElement("p");
+css.appendChild(document.createTextNode(`how to use: click, press space to playback, press r to re-record. seizure warning, flashing background if you click quickly.`));
+document.body.appendChild(info);
+
+
+let startTime;
+let recording = true;
+let events = [];
+document.addEventListener("mousedown", () => {
+if(!recording)return;
+if(!startTime) startTime = new Date().getTime();
+state.textContent = "recording...";
+events.push([new Date().getTime() - startTime, "down"]);
+document.documentElement.classList.add("black");
+})
+document.addEventListener("mouseup", () => {
+if(!recording)return;
+events.push([new Date().getTime() - startTime, "up"]);
+document.documentElement.classList.remove("black");
+})
+
+document.addEventListener("keydown", k => {
+if(k.key === " "){
+state.textContent = "playing back...";
+// playback
+recording = false;
+console.log(events);
+events.forEach(event => setTimeout(() => {
+if(event[1] === "down"){
+document.documentElement.classList.add("black");
+}else{
+document.documentElement.classList.remove("black");
+}
+}, event[0]));
+
+}
+
+if(k.key === "r"){
+state.textContent = "recording...";
+events = [];
+recording = true;
+startTime = undefined;
+}
+
+});
+
+
+})();
+</script>
+</body>
+</html>
