@@ -34,8 +34,8 @@
     <div id="firefoxsupport" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events: none;"></div>
     <script type="text/javascript" id="dnlscript">
 	    
-	    
- (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function(){document.body.removeChild(document.getElementById("jsloadnotice"));
   var SVG = require('svg.js');
   var smoothPath = require('smooth-path');
@@ -86,8 +86,8 @@
   document.addEventListener("mousemove",function(e){
     e.preventDefault(); e.stopPropagation();
     //console.log(e);
-    if(e.button == 0 && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || e.ctrlKey)updateScroll(e.clientX,e.clientY);
+    if((e.buttons & 0b1) && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
+    if((e.buttons & 0b110) || e.ctrlKey)updateScroll(e.clientX,e.clientY);
     return false;
   });
   
@@ -209,21 +209,26 @@
   });
   
   document.addEventListener("keydown",function(e){
-    e.preventDefault(); e.stopPropagation();
     //console.log("press ",e);
     pressedKeys[""+e.key] = true;
     
     if(e.key == "ArrowUp"){
+    e.preventDefault(); e.stopPropagation();
       zoomTo(120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
     }else if(e.key == "ArrowDown"){
+    e.preventDefault(); e.stopPropagation();
       zoomTo(-120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
     }else if(e.key == "ArrowLeft"){
+    e.preventDefault(); e.stopPropagation();
       skw *= 1/2;
     }else if(e.key == "ArrowRight"){
+    e.preventDefault(); e.stopPropagation();
       skw *= 2;
-    }else if(e.ctrlKey && e.key === "z"){ // ctrl+shift+z
+    }else if((e.ctrlKey && e.key === "Z") || (e.ctrlKey && e.key === "y")){ // ctrl+shift+z
+    e.preventDefault(); e.stopPropagation();
       ctx.node.appendChild(redoElems.pop());
-    }else if(e.ctrlKey && e.key === "Z"){ // 
+    }else if(e.ctrlKey && e.key === "z"){ // 
+    e.preventDefault(); e.stopPropagation();
       redoElems.push(ctx.node.lastChild);
       ctx.node.lastChild.remove();
     }
@@ -16237,8 +16242,9 @@ return SVG
 }));
 },{}]},{},[1]);
 
-	    
-	    
+
+
+
 	    
 </script>
 <script type='application/javascript' src='fastclick.js'></script>
