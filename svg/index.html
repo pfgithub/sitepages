@@ -32,237 +32,226 @@
     <button id="undo">undo</button>
     <button id="redo">redo</button>
     <div id="firefoxsupport" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events: none;"></div>
-    <script type="text/javascript" id="dnlscript">(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-if (Object.defineProperty && Object.getOwnPropertyDescriptor && Object.getOwnPropertyDescriptor(Element.prototype, "textContent") && !Object.getOwnPropertyDescriptor(Element.prototype, "textContent").get) {(function() {var innerText = Object.getOwnPropertyDescriptor(Element.prototype, "innerText");Object.defineProperty(Element.prototype, "textContent",{get: function() {return innerText.get.call(this);},set: function(s) {return innerText.set.call(this, s);}});})();}
-
-window.addEventListener("load", (function(){
-  var edit = true;
-  if(document.getElementById("jsloadnotice"))
-    document.body.removeChild(document.getElementById("jsloadnotice"));
-  else{
-    edit = false;
-    var edtoglbtn = document.createElement("button");
-    edtoglbtn.addEventListener("click", function(){
-      edit=!edit;
-      edtoglbtn.textContent = (edit ? "Disable" : "Enable")+" Edit Mode";
-    });
-    edtoglbtn.textContent = "Enable Edit Mode";
-    document.body.appendChild(edtoglbtn);
-  }
-
+    <script type="text/javascript" id="dnlscript">
+	    
+	    
+ (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){document.body.removeChild(document.getElementById("jsloadnotice"));
   var SVG = require('svg.js');
   var smoothPath = require('smooth-path');
-
+  
   var $ = require('jquery');
   require('jquery-mousewheel')($);
-
+  
   var pressedKeys = {};
-
+  
   var minX = 0;
   var minY = 0;
   var maxX = 0;
   var maxY = 0;
+  
+  //var math = require('mathjs');
+  
+  if(!SVG.supported){var alertTitle=document.createElement("h1");alertTitle.textContent="SVG Required";var alertContent=document.createElement("p");alertContent.textContent="Your browser does not appear to support SVG which is required for this program to run",document.body.appendChild(alertTitle),document.body.appendChild(alertContent);}
 
-  if(!SVG.supported){
-    var alertTitle=document.createElement("h1");alertTitle.textContent="SVG Required";
-    var alertContent=document.createElement("p");
-    alertContent.textContent="Your browser does not appear to support SVG which is required for this program to run.",
-    document.body.appendChild(alertTitle),document.body.appendChild(alertContent);}
-
-  var ctx;
-  if(edit)
-    ctx = SVG(document.body).size('100%', '100%');
-  else
-    ctx = SVG(document.getElementById("SvgjsSvg1001"));
-
+  var ctx = SVG('scan').size('100%', '100%');
+  
   var skw = 1;
-
+  
   ctx.spof();
   SVG.on(window, 'resize', function() {
     ctx.spof();
     viewbox = {
       x:viewbox.x,y:viewbox.y,
-      sx:document.getElementById("firefoxsupport").clientWidth*viewbox.scale,
-      sy:document.getElementById("firefoxsupport").clientHeight*viewbox.scale,
+      sx:ctx.node.clientWidth*viewbox.scale,
+      sy:ctx.node.clientHeight*viewbox.scale,
       scale: viewbox.scale
     };
     updateViewbox();
   });
-
-  var cmoval;
-
-  ctx.node.addEventListener("mousedown",function(e){
-    if(e.clientX == undefined) alert("The browser you are using does not support getting mouse positions from SVG nodes. Please try a more modern browser such as Safari, Google Chrome, Microsoft Edge, or Internet Explorer");
-
-    if(e.button == 0)startPolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])startScroll(e.clientX,e.clientY);
-    if(e.button == 2 && pressedKeys["8"]){
+  
+  document.addEventListener("mousedown",function(e){
+    e.preventDefault(); e.stopPropagation(); // bubbling so it shouldn't affect buttons
+    //console.log(e);
+    if(e.button === 0)startPolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button === 1 || e.button === 2 || e.ctrlKey)startScroll(e.clientX,e.clientY);
+    if(e.button === 2 && pressedKeys["Backspace"]){
+      //console.log(e.path, e.path[0], e.path[0].nodeName);
       if(e.path[0].nodeName == "polyline")
-        e.path[0].remove();
+        e.path[1].removeChild(e.path[0]);
     }
-    /*if(e.button == 2 && pressedKeys["67"])
-      if(e.path[0].nodeName == "polyline")
-        cmoval = e.path[0];
-    */
-    if(e.button > 0) {e.preventDefault();return false;}
+    return false;
   });
-
-  ctx.node.addEventListener("mousemove",function(e){
-    if(e.button == 0 && !pressedKeys["17"])updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])updateScroll(e.clientX,e.clientY);
-    if(e.button > 0) {e.preventDefault();return false;}
+  
+  document.addEventListener("mousemove",function(e){
+    e.preventDefault(); e.stopPropagation();
+    //console.log(e);
+    if(e.button == 0 && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button == 1 || e.button == 2 || e.ctrlKey)updateScroll(e.clientX,e.clientY);
+    return false;
   });
-
-  ctx.node.addEventListener("mouseup",function(e){
-    if(e.button == 0)endPolyline(e.clientX,e.clientY);
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])endScroll(e.clientX,e.clientY);
-    if(e.button > 0) {e.preventDefault();return false;}
-    cmoval = undefined;
+  
+  document.addEventListener("mouseup",function(e){
+    e.preventDefault(); e.stopPropagation();
+    //console.log(e);
+    //console.log("Ending Polyline stp1");
+    if(e.button == 0)endPolyline(e.clientX,e.clientY);  
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])endScroll(e.clientX,e.clientY);
+    return false;
   });
-
+  
   var movement = false;
   var zooment = 0;
-  ctx.node.addEventListener("touchstart",function(e){
-    e.preventDefault();
-
+  document.addEventListener("touchstart",function(e){
+    e.preventDefault(); e.stopPropagation();
+    
     if(e.touches.length == 2){
       zooment = 0;
+      console.log("oeh noez");
       if(polyline){ // better get rid of that stuff
-        if (endPolyline()) // fixes bad bugs
-          ctx.node.lastChild.remove(); // causes bad bugs
-
+        endPolyline();
+        ctx.node.lastChild.remove();
       }
       e.touches[0].button = 1;
       movement = true;
-
+      
       var x1 = e.touches[0].clientX;
       var y1 = e.touches[0].clientY;
       var x2 = e.touches[1].clientX;
       var y2 = e.touches[1].clientY;
-
+      
       var a = x1 - x2;
       var b = y1 - y2;
-
+      
       var c = Math.sqrt( a*a + b*b );
-
+      
       zooment = c;
     }else{
       movement = false;
       zooment = 0;
     }
-
+    
     e = e.touches[0];
     e.button = movement ? 1 : 0;
+    //console.log(e);
     if(e.button == 0)startPolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])startScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])startScroll(e.clientX,e.clientY);
+    return false;
   });
-
-  ctx.node.addEventListener("touchmove",function(e){
-    e.preventDefault();
+  
+  document.addEventListener("touchmove",function(e){
+    e.preventDefault(); e.stopPropagation();
     if(e.touches.length == 2){
       var x1 = e.touches[0].clientX;
       var y1 = e.touches[0].clientY;
       var x2 = e.touches[1].clientX;
       var y2 = e.touches[1].clientY;
-
+      
       var a = x1 - x2;
       var b = y1 - y2;
-
+      
       var c = Math.sqrt( a*a + b*b );
-
+      
       zoomTo(-(zooment - c), ((x1-x2)/2+x1), ((y1-y2)/2+y1));
+      //zoomTo(-(zooment - c), ctx.node.clientWidth/2,ctx.node.clientHeight/2);
       zooment = c;
     }else{
       zooment = 0;
       movement = false;
     }
     e = e.touches[0];
-
+    
     e.button = movement ? 1 : 0;
-    if(e.button == 0 && !pressedKeys["17"])updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])updateScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    //console.log(e);
+    if(e.button == 0 && !pressedKeys["Control"])updatePolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])updateScroll(e.clientX,e.clientY);
+    return false;
   });
-
+  
   ctx.node.addEventListener("touchend",function(e){
     zooment = 0;
     e = {button: 0};
+    //console.log(e);
+    //console.log("Ending Polyline stp1");
     e.button = movement ? 1 : 0;
-    if(e.button == 0)endPolyline(e.clientX,e.clientY);
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])endScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    if(e.button == 0)endPolyline(e.clientX,e.clientY);  
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])endScroll(e.clientX,e.clientY);
+    return false;
   });
-
-  ctx.node.addEventListener("mousewheel",function(e){
+  
+  document.addEventListener("mousewheel",function(e){
+    //console.log(e.wheelDelta);
     zoomTo(e.wheelDelta,e.clientX,e.clientY);
   });
-
+  
   window.addEventListener("blur", function(){
     pressedKeys = {};
-    movement = false;
+    //movement = false;
   });
-
+  
   var redoElems = [];
-
+  
   document.getElementById("increase").addEventListener("click", function(e){
     skw *= 2;
   });
-
+  
   document.getElementById("decrease").addEventListener("click", function(e){
     skw *= 1/2;
   });
-
+  
   document.getElementById("undo").addEventListener("click", function(e){
     redoElems.push(ctx.node.lastChild);
     ctx.node.lastChild.remove();
   });
-
+  
   document.getElementById("redo").addEventListener("click", function(e){
     ctx.node.appendChild(redoElems.pop());
   });
-
-  document.body.addEventListener("keydown",function(e){
-    pressedKeys[""+e.keyCode] = true;
-
-    if(e.keyCode == 38){
-      zoomTo(120,document.getElementById("firefoxsupport").clientWidth/2,document.getElementById("firefoxsupport").clientHeight/2);
-    }else if(e.keyCode == 40){
-      zoomTo(-120,document.getElementById("firefoxsupport").clientWidth/2,document.getElementById("firefoxsupport").clientHeight/2);
-    }else if(e.keyCode == 37){
+  
+  document.addEventListener("keydown",function(e){
+    e.preventDefault(); e.stopPropagation();
+    //console.log("press ",e);
+    pressedKeys[""+e.key] = true;
+    
+    if(e.key == "ArrowUp"){
+      zoomTo(120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
+    }else if(e.key == "ArrowDown"){
+      zoomTo(-120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
+    }else if(e.key == "ArrowLeft"){
       skw *= 1/2;
-    }else if(e.keyCode == 39){
+    }else if(e.key == "ArrowRight"){
       skw *= 2;
-    }else if(e.keyCode == 88){ // x
+    }else if(e.ctrlKey && e.key === "z"){ // ctrl+shift+z
       ctx.node.appendChild(redoElems.pop());
-    }else if(e.keyCode == 90){ //
+    }else if(e.ctrlKey && e.key === "Z"){ // 
       redoElems.push(ctx.node.lastChild);
       ctx.node.lastChild.remove();
-    }else if(e.keyCode == 82){
-      viewbox = {x:0,y:0,sx:document.getElementById("firefoxsupport").clientWidth, sy:document.getElementById("firefoxsupport").clientHeight, scale: 1};
-      updateViewbox();
     }
+      //console.log(e.key, e.code);
   });
-
-  document.body.addEventListener("keyup",function(e){
-    pressedKeys[""+e.keyCode] = false;
+  
+  document.addEventListener("keyup",function(e){
+    e.preventDefault(); e.stopPropagation();
+    pressedKeys[""+e.key] = false;
   });
-
+  
   var scrollpos = {};
   //var cb = ctx.node.getAttribute("viewBox").split(" ");
   //var viewbox = {x:cb[0],y:cb[1],sx:cb[2],sy:cb[3]};
-  var viewbox = {x:0,y:0,sx:document.getElementById("firefoxsupport").clientWidth,sy:document.getElementById("firefoxsupport").clientHeight,scale:1};
+  var viewbox = {x:0,y:0,sx:ctx.node.clientWidth,sy:ctx.node.clientHeight,scale:1};
   updateViewbox();
-
+  
   var invertedScrolling = false;
-
+  
   function startScroll(x,y){
+    //console.log("started scroll");
     scrollpos.x = x;
     scrollpos.y = y;
   }
-
+  
   function updateScroll(x,y){
     if(scrollpos.x){
+      //console.log(x, scrollpos.x, x - scrollpos.x);
       viewbox.x -= (invertedScrolling ? -1 : 1)*(x-scrollpos.x)*viewbox.scale;
       viewbox.y -= (invertedScrolling ? -1 : 1)*(y-scrollpos.y)*viewbox.scale;
       scrollpos.x = x;
@@ -270,146 +259,163 @@ window.addEventListener("load", (function(){
       updateViewbox();
     }
   }
-
+  
   function zoomTo(count,x,y){
+    //viewbox.scale = 1;
     var cm;
     count /= 4;
-
-    if(count < 0){
-      cm = 1- ((count) / 100);
-    }else{
-      cm = ((-count) / 100) + 1;
-    }
-
+    
+    //console.log(count);
+    
+    /*if(cm > 10 || cm < 10){
+      if(count < 0){
+        cm = (-count)/100;
+      }else{
+        cm = (1/((count)/100));
+      }
+    }else{*/
+      if(count < 0){
+        cm = 1- ((count) / 100);
+      }else{
+        cm = ((-count) / 100) + 1;
+      }
+    //}
+    
     cm = Math.abs(cm);
-
+    
     viewbox.scale *= cm;
-
+    
     var wox = nax(x);
     var woy = nay(y);
-
+    
     viewbox.x -= (((wox - viewbox.x) * (-(1/cm))) - viewbox.x) + wox;
     viewbox.y -= (((woy - viewbox.y) * (-(1/cm))) - viewbox.y) + woy;
-
+    
     updateSxSy();
   }
-
+  
   function updateSxSy(){
-    viewbox.sx = document.getElementById("firefoxsupport").clientWidth * viewbox.scale;
-    viewbox.sy = document.getElementById("firefoxsupport").clientHeight * viewbox.scale;
-
+    viewbox.sx = ctx.node.clientWidth * viewbox.scale;
+    viewbox.sy = ctx.node.clientHeight * viewbox.scale;
+    
     updateViewbox();
   }
-
+  
   function endScroll(x,y){
+    //console.log("ended scroll",ctx.node.getAttribute("viewBox"));
     scrollpos = {};
   }
-
+  
   function updateViewbox(){
     ctx.node.setAttribute("viewBox",viewbox.x+" "+viewbox.y+" "+viewbox.sx+" "+viewbox.sy);
   }
-
+  
   function nax(x){
     return normalizeCoord(x,"x");
   }
-
+  
   function nay(y){
     return normalizeCoord(y,"y");
   }
-
+  
   function updateX(x){
     minX = Math.min(x,minX);
     maxX = Math.max(x,maxX);
+    
+    //console.log(minX);
   }
-
+  
   function updateY(y){
     minY = Math.min(y,minY);
     maxY = Math.max(y,maxY);
   }
-
+  
   //var maxl = ctx.rect(maxX - minX, maxY - minY).x(minX).y(minY).back().fill('none').stroke({width: skw}); DISABLE visualliser
-
+  
   function updateXY(x,y){
     updateX(x);
     updateY(y);
-
+    
     // maxl.stroke({width:skw}).move(minX, minY).back().width(maxX - minX).height(maxY - minY);
   }
-
+  
   function normalizeCoord(coord,val){
+    //console.log(viewbox[val],coord,val);
     return ((coord*viewbox.scale + viewbox[val]));
-  }
-
+  } 
+  
   function viewViewbox(){
     ctx.node.setAttribute("viewBox",minX+" "+minY+" "+(maxX)+" "+maxY);
   }
-
+  
   document.viewViewbox = viewViewbox;
-
+  
   var polyline;
   var polylinearr = [];
   var prevloc = [];
-
-
+  
+  
   function startPolyline(x,y){
-    if(!edit) return;
     polylinearr = [[x,y]];
     prevloc = [x,y];
     polyline = ctx.polyline(polylinearr).fill('none').stroke({ width: skw });
-
+    
     updateXY(x,y);
   }
-
+  
   function updatePolyline(x,y){
-    if(!edit) return;
     if(!polyline) return;
     //if(!(math.distance([x,y],prevloc) > 3)) return;
     polylinearr.push([x,y]);
-    polyline.plot(polylinearr).stroke({ width: skw });
+    polyline.plot(polylinearr);
     prevloc = [x,y];
-
+    
     redoElems = [];
-
+    
     updateXY(x,y);
   }
-
+  
   function endPolyline(x,y){
-    if(!edit) return;
+    //console.log("Ending Polyline");
     if(!polyline) return;
-
-    var res = true;
-
+    
     var spable = [];
     polylinearr.forEach(function(pol){
       spable.push(pol[0]);
       spable.push(pol[1]);
     },this);
-
-    if(spable[2]){
-      var decode = smoothPath(spable);
-      var nextelem = [];
-      polylinearr = [];
-
-      decode.forEach(function(elm){
-        nextelem.push(elm);
-        if(nextelem.length == 2){
-          polylinearr.push(nextelem);
-          nextelem = [];
-        }
-      });
-
-      polyline.animate(300).plot(polylinearr);
-    }else{
-      ctx.node.lastChild.remove();
-      res = false;
-    }
-
+    
+    var decode = smoothPath(spable);
+    var nextelem = [];
+    polylinearr = [];
+    
+    decode.forEach(function(elm){
+      nextelem.push(elm);
+      if(nextelem.length == 2){
+        polylinearr.push(nextelem);
+        nextelem = [];
+      }
+    });
+    
+    //console.log(decode.length, polylinearr.length * 2);
+    
+    polyline.animate(300).plot(polylinearr);
+    //polyline.plot(polylinearr);
     polyline = undefined;
     polylinearr = undefined;
-
-    return res;
   }
-}));
+  
+  /*var rect = ctx.rect(100, 100).attr({ fill: '#f06' });*/
+  
+  /*var polyline = ctx.polyline([[0,0], [50,50], [50,100]]).fill('none').stroke({ width: 1 });
+  console.log(polyline);
+  //polyline.morphArray([[0,0], [100,50], [50,100]]);
+  //polyline.array().push([[50,100]]);
+  polyline.animate(1000).plot([[0,0], [100,50], [50,100]]);
+  //polyline.animate(3000).plot([[0,0], [100,50], [50,100], [150,50], [200,50], [250,100], [300,50], [350,50]]); // use animate for smoothing
+  
+  console.log(ctx);*/
+})();
 },{"jquery":3,"jquery-mousewheel":2,"smooth-path":4,"svg.js":5}],2:[function(require,module,exports){
 /*!
  * jQuery Mousewheel 3.1.13
@@ -16230,6 +16236,10 @@ return SVG
 
 }));
 },{}]},{},[1]);
+
+	    
+	    
+	    
 </script>
 <script type='application/javascript' src='fastclick.js'></script>
 <script>
