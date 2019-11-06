@@ -33,37 +33,40 @@
     updateViewbox();
   });
   
-  ctx.node.addEventListener("mousedown",function(e){
+  document.addEventListener("mousedown",function(e){
+    e.preventDefault(); e.stopPropagation(); // bubbling so it shouldn't affect buttons
     //console.log(e);
-    if(e.button == 0)startPolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])startScroll(e.clientX,e.clientY);
-    if(e.button == 2 && pressedKeys["8"]){
+    if(e.button === 0)startPolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button === 1 || e.button === 2 || e.ctrlKey)startScroll(e.clientX,e.clientY);
+    if(e.button === 2 && pressedKeys["Backspace"]){
       //console.log(e.path, e.path[0], e.path[0].nodeName);
       if(e.path[0].nodeName == "polyline")
         e.path[1].removeChild(e.path[0]);
     }
-    if(e.button > 0) {e.preventDefault();return false;}
+    return false;
   });
   
-  ctx.node.addEventListener("mousemove",function(e){
+  document.addEventListener("mousemove",function(e){
+    e.preventDefault(); e.stopPropagation();
     //console.log(e);
-    if(e.button == 0 && !pressedKeys["17"])updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])updateScroll(e.clientX,e.clientY);
-    if(e.button > 0) {e.preventDefault();return false;}
+    if(e.button == 0 && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button == 1 || e.button == 2 || e.ctrlKey)updateScroll(e.clientX,e.clientY);
+    return false;
   });
   
-  ctx.node.addEventListener("mouseup",function(e){
+  document.addEventListener("mouseup",function(e){
+    e.preventDefault(); e.stopPropagation();
     //console.log(e);
     //console.log("Ending Polyline stp1");
     if(e.button == 0)endPolyline(e.clientX,e.clientY);  
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])endScroll(e.clientX,e.clientY);
-    if(e.button > 0) {e.preventDefault();return false;}
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])endScroll(e.clientX,e.clientY);
+    return false;
   });
   
   var movement = false;
   var zooment = 0;
-  ctx.node.addEventListener("touchstart",function(e){
-    e.preventDefault();
+  document.addEventListener("touchstart",function(e){
+    e.preventDefault(); e.stopPropagation();
     
     if(e.touches.length == 2){
       zooment = 0;
@@ -95,12 +98,12 @@
     e.button = movement ? 1 : 0;
     //console.log(e);
     if(e.button == 0)startPolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])startScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])startScroll(e.clientX,e.clientY);
+    return false;
   });
   
-  ctx.node.addEventListener("touchmove",function(e){
-    e.preventDefault();
+  document.addEventListener("touchmove",function(e){
+    e.preventDefault(); e.stopPropagation();
     if(e.touches.length == 2){
       var x1 = e.touches[0].clientX;
       var y1 = e.touches[0].clientY;
@@ -123,9 +126,9 @@
     
     e.button = movement ? 1 : 0;
     //console.log(e);
-    if(e.button == 0 && !pressedKeys["17"])updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])updateScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    if(e.button == 0 && !pressedKeys["Control"])updatePolyline(nax(e.clientX),nay(e.clientY));
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])updateScroll(e.clientX,e.clientY);
+    return false;
   });
   
   ctx.node.addEventListener("touchend",function(e){
@@ -135,18 +138,18 @@
     //console.log("Ending Polyline stp1");
     e.button = movement ? 1 : 0;
     if(e.button == 0)endPolyline(e.clientX,e.clientY);  
-    if(e.button == 1 || e.button == 2 || pressedKeys["17"])endScroll(e.clientX,e.clientY);
-    if(e.button > 0) {return false;}
+    if(e.button == 1 || e.button == 2 || pressedKeys["Control"])endScroll(e.clientX,e.clientY);
+    return false;
   });
   
-  ctx.node.addEventListener("mousewheel",function(e){
+  document.addEventListener("mousewheel",function(e){
     //console.log(e.wheelDelta);
     zoomTo(e.wheelDelta,e.clientX,e.clientY);
   });
   
   window.addEventListener("blur", function(){
     pressedKeys = {};
-    movement = false;
+    //movement = false;
   });
   
   var redoElems = [];
@@ -168,29 +171,31 @@
     ctx.node.appendChild(redoElems.pop());
   });
   
-  document.body.addEventListener("keydown",function(e){
+  document.addEventListener("keydown",function(e){
+    e.preventDefault(); e.stopPropagation();
     //console.log("press ",e);
-    pressedKeys[""+e.keyCode] = true;
+    pressedKeys[""+e.key] = true;
     
-    if(e.keyCode == 38){
+    if(e.key == "ArrowUp"){
       zoomTo(120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
-    }else if(e.keyCode == 40){
+    }else if(e.key == "ArrowDown"){
       zoomTo(-120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
-    }else if(e.keyCode == 37){
+    }else if(e.key == "ArrowLeft"){
       skw *= 1/2;
-    }else if(e.keyCode == 39){
+    }else if(e.key == "ArrowRight"){
       skw *= 2;
-    }else if(e.keyCode == 88){ // x
+    }else if(e.ctrlKey && e.key === "z"){ // ctrl+shift+z
       ctx.node.appendChild(redoElems.pop());
-    }else if(e.keyCode == 90){ // 
+    }else if(e.ctrlKey && e.key === "Z"){ // 
       redoElems.push(ctx.node.lastChild);
       ctx.node.lastChild.remove();
     }
-      //console.log(e.keyCode);
+      //console.log(e.key, e.code);
   });
   
-  document.body.addEventListener("keyup",function(e){
-    pressedKeys[""+e.keyCode] = false;
+  document.addEventListener("keyup",function(e){
+    e.preventDefault(); e.stopPropagation();
+    pressedKeys[""+e.key] = false;
   });
   
   var scrollpos = {};
