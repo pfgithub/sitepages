@@ -49,8 +49,8 @@
   document.addEventListener("mousemove",function(e){
     e.preventDefault(); e.stopPropagation();
     //console.log(e);
-    if(e.button == 0 && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
-    if(e.button == 1 || e.button == 2 || e.ctrlKey)updateScroll(e.clientX,e.clientY);
+    if((e.buttons & 0b1) && !e.ctrlKey)updatePolyline(nax(e.clientX),nay(e.clientY));
+    if((e.buttons & 0b110) || e.ctrlKey)updateScroll(e.clientX,e.clientY);
     return false;
   });
   
@@ -172,21 +172,26 @@
   });
   
   document.addEventListener("keydown",function(e){
-    e.preventDefault(); e.stopPropagation();
     //console.log("press ",e);
     pressedKeys[""+e.key] = true;
     
     if(e.key == "ArrowUp"){
+    e.preventDefault(); e.stopPropagation();
       zoomTo(120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
     }else if(e.key == "ArrowDown"){
+    e.preventDefault(); e.stopPropagation();
       zoomTo(-120,ctx.node.clientWidth/2,ctx.node.clientHeight/2);
     }else if(e.key == "ArrowLeft"){
+    e.preventDefault(); e.stopPropagation();
       skw *= 1/2;
     }else if(e.key == "ArrowRight"){
+    e.preventDefault(); e.stopPropagation();
       skw *= 2;
-    }else if(e.ctrlKey && e.key === "z"){ // ctrl+shift+z
+    }else if((e.ctrlKey && e.key === "Z") || (e.ctrlKey && e.key === "y")){ // ctrl+shift+z
+    e.preventDefault(); e.stopPropagation();
       ctx.node.appendChild(redoElems.pop());
-    }else if(e.ctrlKey && e.key === "Z"){ // 
+    }else if(e.ctrlKey && e.key === "z"){ // 
+    e.preventDefault(); e.stopPropagation();
       redoElems.push(ctx.node.lastChild);
       ctx.node.lastChild.remove();
     }
