@@ -23,6 +23,23 @@ e.preventDefault(); e.stopPropagation();
 input.value = (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e.key !== "Alt" ? "Alt+" : "") + (e.shiftKey && e.key !== "Shift" ? "Shift+" : "") + (e.key.trim() ? e.key : e.code);
 
 });
+  
+input.addEventListener("blur", () => {
+
+if(!input.value){
+input.value = input.getAttribute("--previous-value");
+input.placeholder = "";
+}
+
+});
+  
+input.addEventListener("focus", () => {
+
+input.setAttribute("--previous-value", input.value);
+input.value = "";
+input.placeholder = "press a key";
+  
+});
 
 });
 
