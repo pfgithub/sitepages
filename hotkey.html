@@ -27,7 +27,7 @@ input.value = (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e
 input.addEventListener("blur", () => {
 
 if(!input.value){
-input.value = input.getAttribute("--previous-value");
+input.value = input.getAttribute("previousvalue");
 input.placeholder = "";
 }
 
@@ -35,7 +35,7 @@ input.placeholder = "";
   
 input.addEventListener("focus", () => {
 
-input.setAttribute("--previous-value", input.value);
+input.setAttribute("previousvalue", input.value);
 input.value = "";
 input.placeholder = "press a key";
   
