@@ -13,7 +13,7 @@ layout: default
 <div id="maincontent"></div>
 
 <script>
-
+let parent = (document.getElementById("maincontent") || document.body);
 let usedKeys = {};
   
   
@@ -23,11 +23,11 @@ function updateUsedKeys(v){
 usedKeys[v].forEach(q => usedKeys[v].length > 1 ? q.classList.add("conflict") : q.classList.remove("conflict"));
 }
   
-let fn = (() => {
+let fn = ((autofocus) => {
 
 let input = document.createElement("input");
 
-(document.getElementById("maincontent") || document.body).appendChild(input);
+parent.appendChild(input);
 
   
   let removeConflict = () => {
@@ -83,9 +83,18 @@ input.value = "";
 input.placeholder = "press a key";
   
 });
+  
+  if(autofocus){input.focus();}
 
 });
 
 for(let i = 0; i < 5; i++) fn();
+  
+  let plusbtn = document.createElement("button");
+  plusbutton.appendChild(document.createTextNode("+"));
+  parent.appendChild(plusbutton);
+  
+  plusbutton.onclick = () => {fn(true);};
+  
 
 </script>
