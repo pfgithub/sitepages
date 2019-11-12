@@ -3,16 +3,46 @@ title: Hotkey
 layout: default
 ---
 
+<style>
+  .conflict{
+  color: red;
+  }
+</style>
+
+
 <div id="maincontent"></div>
 
 <script>
 
+let usedKeys = {};
+  
+  
+function updateUsedKeys(v){
+
+  if(!usedKeys[v]) usedKeys[v] = [];
+usedKeys[v].forEach(q => usedKeys[v].length > 1 ? q.classList.add("conflict") : q.classList.remove("conflict"));
+}
+  
 let fn = (() => {
 
 let input = document.createElement("input");
 
-document.getElementById("maincontent").appendChild(input);
+(document.getElementById("maincontent") || document.body).appendChild(input);
 
+  
+  let removeConflict = () => {
+  input.classList.remove("conflict");
+  usedKeys[input.value] = usedKeys[input.value].filter(v => {
+    if(v === input){ return false; }
+    return true;
+  });
+  updateUsedKeys(input.value);
+  };
+  let addConflict = () => {
+  if(!usedKeys[input.value]) usedKeys[input.value] = [];
+  usedKeys[input.value].push(input);
+  updateUsedKeys(input.value);
+  };
 
 input.addEventListener("keydown", e => {
 
@@ -20,14 +50,24 @@ console.log(e);
 
 e.preventDefault(); e.stopPropagation();
 
+  if(!usedKeys[input.value]) usedKeys[input.value] = [];
+  
+  removeConflict();
+  
 input.value = (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e.key !== "Alt" ? "Alt+" : "") + (e.shiftKey && e.key !== "Shift" ? "Shift+" : "") + (e.key.trim() ? e.key : e.code);
 
+  
+  addConflict();
+  
+  
 });
   
 input.addEventListener("blur", () => {
 
 if(!input.value){
+  removeConflict();
 input.value = input.getAttribute("previousvalue");
+  addConflict();
 input.placeholder = "";
 }
 
@@ -36,7 +76,9 @@ input.placeholder = "";
 input.addEventListener("focus", () => {
 
 input.setAttribute("previousvalue", input.value);
+  removeConflict();
 input.value = "";
+  addConflict();
 input.placeholder = "press a key";
   
 });
