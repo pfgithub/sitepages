@@ -31,6 +31,8 @@ let input = document.createElement("input");
 
   
   let removeConflict = () => {
+
+  if(!usedKeys[input.value]) usedKeys[input.value] = [];
   input.classList.remove("conflict");
   usedKeys[input.value] = usedKeys[input.value].filter(v => {
     if(v === input){ return false; }
@@ -39,6 +41,7 @@ let input = document.createElement("input");
   updateUsedKeys(input.value);
   };
   let addConflict = () => {
+
   if(!usedKeys[input.value]) usedKeys[input.value] = [];
   usedKeys[input.value].push(input);
   updateUsedKeys(input.value);
@@ -49,8 +52,6 @@ input.addEventListener("keydown", e => {
 console.log(e);
 
 e.preventDefault(); e.stopPropagation();
-
-  if(!usedKeys[input.value]) usedKeys[input.value] = [];
   
   removeConflict();
   
