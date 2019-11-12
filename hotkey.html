@@ -13,7 +13,8 @@ layout: default
 <div id="maincontent"></div>
 
 <script>
-let parent = (document.getElementById("maincontent") || document.body);
+  
+  let insert = el => (document.getElementById("maincontent") || document.body).appendChild(el);
 let usedKeys = {};
   
   
@@ -26,8 +27,7 @@ usedKeys[v].forEach(q => usedKeys[v].length > 1 ? q.classList.add("conflict") : 
 let fn = ((autofocus) => {
 
 let input = document.createElement("input");
-
-parent.appendChild(input);
+insert(input);
 
   
   let removeConflict = () => {
@@ -92,8 +92,8 @@ for(let i = 0; i < 5; i++) fn();
   
   let plusbutton = document.createElement("button");
   plusbutton.appendChild(document.createTextNode("+"));
-  parent.appendChild(plusbutton);
-  
+  insert(plusbutton);
+  insert = el => plusbutton.parentNode.insertBefore(el, plusbutton);
   plusbutton.onclick = () => {fn(true);};
   
 
