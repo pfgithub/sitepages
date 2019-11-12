@@ -1,0 +1,31 @@
+---
+title: Hotkey
+layout: default
+---
+
+<div id="maincontent"></div>
+
+<script>
+
+let fn = (() => {
+
+let input = document.createElement("input");
+
+document.getElementById("maincontent").appendChild(input);
+
+
+input.addEventListener("keydown", e => {
+
+console.log(e);
+
+e.preventDefault(); e.stopPropagation();
+
+input.value = (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e.key !== "Alt" ? "Alt+" : "") + (e.shiftKey && e.key !== "Shift" ? "Shift+" : "") + (e.key.trim() ? e.key : e.code);
+
+});
+
+});
+
+for(let i = 0; i < 5; i++) fn();
+
+</script>
