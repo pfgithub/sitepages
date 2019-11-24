@@ -7,6 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Typing Speed Test</title>
 <style>
+  html{margin: 0; padding: 0;}
+  body{margin: 0; padding: 0;}
 #out{
 white-space:pre-wrap;
   font-size: 13px;
@@ -109,6 +111,8 @@ let prevVal = [];
 
 _in.addEventListener("input", e => { // keyUp?
 
+  _in.value = "";
+  
 if(!startTime) {startTime = new Date().getTime();}
 
 let curr = _in.value.split("");
