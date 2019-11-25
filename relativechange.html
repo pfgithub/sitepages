@@ -1,0 +1,59 @@
+---
+title: Relative Change
+layout: default
+---
+
+<div id="maincontent"></div>
+
+<script>
+let nodeValue = Symbol("node");
+function setup(info, cb){
+let doUpdate = () => {
+let resValues = [];
+info.forEach(i => {
+let resValue = i.get ? i.get(i.node) : i.set ? {set: (v) => i.set(i.node, v)} : {};
+resValue[nodeValue] = i.node;
+resValues.push(resValue);
+});
+cb(resValues);
+};
+info.forEach(i => {
+i.node = document.createElement(i.type);
+if(i.change) {i.change(i.node, () => {
+doUpdate();
+})}
+(document.getElementById("maincontent") || document.body).appendChild(i.node);
+});
+doUpdate();
+}
+let input = s => ({type: "input", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let textarea = s => ({type: "textarea", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let pre = s => ({type: "pre", name: s, mode: "set", set: (q,v) => q.textContent = v});
+setup([textarea(), pre()], ([intextr, outtext]) => {
+
+let intext = intextr.split("").filter(c => (c === "\n" || c === " ") ? false : true );
+
+let twochars = [];
+for(let i = 0; i < intext.length - 1; i++){
+twochars.push([intext[i], intext[i + 1]]);
+}
+
+console.log(twochars);
+
+let setlist = "1234567890-=qwertyuiop[]\asdfghjkl;'zxcvbnm,./";
+
+outtext.set(twochars.map(([a, b]) => {
+
+let pos = l => setlist.indexOf(l);
+
+let ap = pos(a);
+let bp = pos(b);
+
+
+
+return ap === -1 || bp === -1 ? "?" : ap > bp ? "^" : ap < bp ? "v" : "=";
+
+}).join(""));
+
+});
+</script>
