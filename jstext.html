@@ -7,17 +7,17 @@ layout: default
 
 <script>
 
-let nodeValue=Symbol("node");function setup(e,t){let n=()=>{let n=[];e.forEach(
-e=>{let t=e.get?e.get(e.node):e.set?{set:t=>e.set(e.node,t)}:{};t[nodeValue]=e
-.node,n.push(t)}),t(n)};e.forEach(e=>{e.node=document.createElement(e.type),e
-.change&&e.change(e.node,()=>{n()}),(document.getElementById("maincontent")||
+let nodeValue= Symbol("node");function setup(e,t){let n=()=>{let n=[];e.forEach(
+e=>{let t=e .get?e. get(e.node):e.set?{set:t=>e.set(e.node,t)}:{};t[nodeValue]=e
+.node,n.push(t)}) ,t(n)};e .forEach(e=>{e.node=document. createElement(e.type),e
+.change&&e.change(e .node,() => {n()}),(document.getElementById("maincontent")||
 document.body).appendChild(e.node)}),n()}let input=e=>({type:"input",name:e,mode
-:"get",get:e=>e.value,change:(e,t)=>e.addEventListener("input",()=>t())}),
-textarea=e=>({type:"textarea",name:e,mode:"get",get:e=>e.value,change:(e,t)=>e.
-addEventListener("input",()=>t())}),pre=e=>({type:"pre",name:e,mode:"set",set:
+:"get" ,get : e=>e.value,change:(e ,t)=>e. addEventListener( "input",()=>t())}),
+textarea= e=>({type:"textarea",name:e,mode:"get",get:e=>e.value,change:(e,t)=>e.
+addEventListener( "input",()=>t())}), pre=e=>({type:"pre",name:e,mode:"set",set:
 (e,t)=>e.textContent=t});
 
-setup([textarea(), pre(), pre()], ([intextr, ontjs, outv]) => {
+setup([textarea(), pre(), pre()], ([intext, outjs, outv]) => {
 	let numbers = [
 		"+!{}",
 		"+!!{}",
