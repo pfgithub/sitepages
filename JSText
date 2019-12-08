@@ -1,0 +1,71 @@
+---
+title: JSText
+layout: default
+---
+
+<div id="maincontent"></div>
+
+<script>
+
+let nodeValue=Symbol("node");function setup(e,t){let n=()=>{let n=[];e.forEach(
+e=>{let t=e.get?e.get(e.node):e.set?{set:t=>e.set(e.node,t)}:{};t[nodeValue]=e
+.node,n.push(t)}),t(n)};e.forEach(e=>{e.node=document.createElement(e.type),e
+.change&&e.change(e.node,()=>{n()}),(document.getElementById("maincontent")||
+document.body).appendChild(e.node)}),n()}let input=e=>({type:"input",name:e,mode
+:"get",get:e=>e.value,change:(e,t)=>e.addEventListener("input",()=>t())}),
+textarea=e=>({type:"textarea",name:e,mode:"get",get:e=>e.value,change:(e,t)=>e.
+addEventListener("input",()=>t())}),pre=e=>({type:"pre",name:e,mode:"set",set:
+(e,t)=>e.textContent=t});
+
+setup([textarea(), pre(), pre()], ([intextr, ontjs, outv]) => {
+	let numbers = [
+		"+!{}",
+		"+!!{}",
+		"!!{}+!!{}",
+		"!!{}+!!{}+!!{}",
+		"!!{}+!!{}+!!{}+!!{}",
+		"!!{}+!!{}+!!{}+!!{}+!!{}",
+		"(!!{}+!!{}+!!{})*(!!{}+!!{})",
+		"(!!{}+!!{}+!!{})*(!!{}+!!{})+!!{}",
+		"(!!{}+!!{}+!!{}+!!{})*(!!{}+!!{})",
+		"(!!{}+!!{}+!!{})*(!!{}+!!{}+!!{})",
+		"(!!{}+!!{}+!!{}+!!{}+!!{})*(!!{}+!!{})",
+		"(!!{}+!!{}+!!{}+!!{}+!!{})*(!!{}+!!{})+!!{}",
+		"(!!{}+!!{}+!!{}+!!{})*(!!{}+!!{}+!!{})",
+		"(!!{}+!!{}+!!{}+!!{})*(!!{}+!!{}+!!{})+!!{}",
+		"((!!{}+!!{}+!!{})*(!!{}+!!{})+!!{})*(!!{}+!!{})",
+		"(!!{}+!!{}+!!{}+!!{}+!!{})*(!!{}+!!{}+!!{})",
+		"(!!{}+!!{}+!!{}+!!{})*(!!{}+!!{}+!!{}+!!{})",
+	];
+
+	function findLetter(letter) {
+		let resv = [
+			[{} + !!{}, "({}+!!{})"],
+			[!{} + {}, "(!{}+{})"],
+			[!!{} + {}, "(!!{}+{})"],
+			[{} - {} + {}, "({}-{}+{})"],
+		]
+			.flatMap(([name, value]) =>
+				numbers[name.indexOf(letter)]
+					? [value + "[" + numbers[name.indexOf(letter)] + "]"]
+					: [],
+			)
+			.sort((a, b) => a.length - b.length);
+		return resv[0];
+	}
+
+	outjs.set(
+		intext
+			.split("")
+			.map(char => findLetter(char) || findLetter("["))
+			.join(""),
+	);
+	outv.set(
+		intext
+			.split("")
+			.map(char => (findLetter(char) ? char : "["))
+			.join(""),
+	);
+});
+
+</script>
