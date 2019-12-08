@@ -62,6 +62,7 @@ setTimeout(() => elem.classList.add("exists"), 0);
     
     gy = e.clientY;
    
+    return;
     if(e.buttons > 0){
   let y = e.clientY;
 lastClick = y;
@@ -86,6 +87,15 @@ gothing()
 
 }, {capturing: true});
   
+document.addEventListener("touchstart", e => {
+
+    e.preventDefault(); e.stopPropagation();
+  gy = e.touches[0].clientY;
+  
+gothing()
+
+}, {capturing: true});
+  
   document.addEventListener("keydown", e => {
 gothing()
   }, {capturing: true});
@@ -95,6 +105,7 @@ document.body.classList.remove("down");
 document.body.classList.remove("up");
 document.body.classList.remove("same");
 
+  return;
   gy = e.clientY;
   let y = e.clientY;
 lastClick = y;
