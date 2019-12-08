@@ -57,7 +57,20 @@ document.body.insertBefore(elem, document.getElementById("clickline"));
 setTimeout(() => elem.classList.add("exists"), 0);
 }
 
-  document.onmousemove = e => gy = e.clientY;
+  document.onmousemove = e => {
+    
+    
+    gy = e.clientY;
+   
+    if(e.buttons > 0){
+  let y = e.clientY;
+lastClick = y;
+lastClickTime = new Date().getTime();
+    document.getElementById("clickline").style.top = "" + lastClick + "px"; 
+      
+    }
+    
+  }
   
 document.addEventListener("mousedown", e => {
 
@@ -81,6 +94,12 @@ document.addEventListener("mouseup", e => {
 document.body.classList.remove("down");
 document.body.classList.remove("up");
 document.body.classList.remove("same");
+
+  gy = e.clientY;
+  let y = e.clientY;
+lastClick = y;
+lastClickTime = new Date().getTime();
+    document.getElementById("clickline").style.top = "" + lastClick + "px";
 });
   
   function gothing(){
