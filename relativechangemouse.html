@@ -15,7 +15,7 @@
   background-color: yellow;
   }
     #clickline{
-    position:fixed;top:0;left:0;right:0;padding:3px;background-color:black;
+    position:fixed;top:0;left:0;right:0;padding:6px;background-color:black;
     }
  body{
  display: flex;
@@ -122,11 +122,11 @@ let time = new Date().getTime();
 
 let y = gy;
 
-if(y > lastClick + 3){
+if(y > lastClick + 6){
 add("v", "down", time - lastClickTime);
 document.body.classList.add("down");
 }else
-if(y < lastClick - 3){
+if(y < lastClick - 6){
 add("^", "up", time - lastClickTime);
 document.body.classList.add("up");
 }else{
