@@ -14,6 +14,9 @@
   span.same{
   background-color: yellow;
   }
+    #clickline{
+    position:fixed;top:0;left:0;right:0;padding:3px;background-color:black;
+    }
  body{
  display: flex;
 
@@ -34,6 +37,7 @@ span.exists{transform:scale(1)}
   </head>
 <body>
 
+  <div id="clickline"></div>
 
 <script>
 
@@ -49,7 +53,7 @@ let elem = document.createElement("span");
 elem.appendChild(document.createTextNode(v));
 elem.classList.add(classv);
 elem.setAttribute("aria-label", classv);
-document.body.appendChild(elem);
+document.body.insertBefore(elem, document.getElementById("clickline"));
 setTimeout(() => elem.classList.add("exists"), 0);
 }
 
@@ -70,7 +74,6 @@ gothing()
 }, {capturing: true});
   
   document.addEventListener("keydown", e => {
-    e.preventDefault(); e.stopPropagation();
 gothing()
   }, {capturing: true});
 
@@ -103,6 +106,7 @@ document.body.classList.add("same");
 
 lastClick = y;
 lastClickTime = time;
+    document.getElementById("clickline").style.top = "" + lastClick + "px";
     
   }
 
