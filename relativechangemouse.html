@@ -40,6 +40,8 @@ span.exists{transform:scale(1)}
 let lastClick = Infinity;
 let lastClickTime = 0;
 
+  let gy = 0;
+  
 document.oncontextmenu = e => false;
 
 function add(v, classv){
@@ -51,18 +53,41 @@ document.body.appendChild(elem);
 setTimeout(() => elem.classList.add("exists"), 0);
 }
 
+  document.onmousemove = e => gy = e.clientY;
+  
 document.addEventListener("mousedown", e => {
 
-e.preventDefault(); e.stopPropagation();
-
-let time = new Date().getTime();
-
-if(e.button === 2){
+    e.preventDefault(); e.stopPropagation();
+  gy = e.clientY;
+  
+  if(e.button === 2){
 lastClick = Infinity;
 add(" ");
 }
+  
+gothing()
 
-let y = e.clientY;
+}, {capturing: true});
+  
+  document.addEventListener("keydown", e => {
+    e.preventDefault(); e.stopPropagation();
+gothing()
+  }, {capturing: true});
+
+document.addEventListener("mouseup", e => {
+document.body.classList.remove("down");
+document.body.classList.remove("up");
+document.body.classList.remove("same");
+});
+  
+  function gothing(){
+   
+
+let time = new Date().getTime();
+
+
+
+let y = gy;
 
 if(y > lastClick + 3){
 add("v", "down", time - lastClickTime);
@@ -78,14 +103,8 @@ document.body.classList.add("same");
 
 lastClick = y;
 lastClickTime = time;
-
-}, {capturing: true});
-
-document.addEventListener("mouseup", e => {
-document.body.classList.remove("down");
-document.body.classList.remove("up");
-document.body.classList.remove("same");
-});
+    
+  }
 
 
 </script>
