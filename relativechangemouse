@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>click recorder playback</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><!-- this would need buttons and pointerevents for mobile support -->
+  <style>
+  span.down{
+  background-color: red;
+  }
+  span.up{
+  background-color: green;
+  }
+  span.same{
+  background-color: yellow;
+  }
+ body{
+ display: flex;
+
+flex-wrap: wrap;
+ }
+ 
+ span{
+ padding:10px;margin:10px;border-radius:5px;
+
+   transform: scale(0);
+   transition:0.1s transform;
+
+}
+span.exists{transform:scale(1)}
+  
+  </style>
+  
+  </head>
+<body>
+<script>
+
+
+<script>
+
+let lastClick = Infinity;
+let lastClickTime = 0;
+
+document.oncontextmenu = e => false;
+
+function add(v, classv){
+let elem = document.createElement("span");
+elem.appendChild(document.createTextNode(v));
+elem.classList.add(classv);
+elem.setAttribute("aria-label", classv);
+document.body.appendChild(elem);
+setTimeout(() => elem.classList.add("exists"), 0);
+}
+
+document.addEventListener("mousedown", e => {
+
+e.preventDefault(); e.stopPropagation();
+
+let time = new Date().getTime();
+
+if(e.button === 2){
+lastClick = Infinity;
+add(" ");
+}
+
+let y = e.clientY;
+
+if(y > lastClick + 3){
+add("v", "down", time - lastClickTime);
+document.body.classList.add("down");
+}else
+if(y < lastClick - 3){
+add("^", "up", time - lastClickTime);
+document.body.classList.add("up");
+}else{
+add("=", "same", time - lastClickTime);
+document.body.classList.add("same");
+}
+
+lastClick = y;
+lastClickTime = time;
+
+}, {capturing: true});
+
+document.addEventListener("mouseup", e => {
+document.body.classList.remove("down");
+document.body.classList.remove("up");
+document.body.classList.remove("same");
+});
+
+
+</script>
+</body>
+</html>
