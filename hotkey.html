@@ -55,7 +55,7 @@ e.preventDefault(); e.stopPropagation();
   
   removeConflict();
   
-input.value = (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e.key !== "Alt" ? "Alt+" : "") + (e.shiftKey && e.key !== "Shift" ? "Shift+" : "") + (e.key.trim() ? e.key : e.code);
+input.value = (e.metaKey && e.key !== "Meta" ? "Meta+" : "") + (e.ctrlKey && e.key !== "Control" ? "Ctrl+" : "") + (e.altKey && e.key !== "Alt" ? "Alt+" : "") + (e.shiftKey && e.key !== "Shift" ? "Shift+" : "") + (e.key.trim() ? e.key : e.code);
 
   
   addConflict();
