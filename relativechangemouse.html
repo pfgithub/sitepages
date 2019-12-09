@@ -98,7 +98,7 @@ gothing()
 }, {capturing: true});
   
   document.addEventListener("keydown", e => {
-gothing()
+setTimeout(() => gothing(), 50);
   }, {capturing: true});
 
 document.addEventListener("mouseup", e => {
