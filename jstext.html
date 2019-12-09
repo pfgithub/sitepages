@@ -58,7 +58,7 @@ setup([textarea(), pre(), pre()], ([intext, outjs, outv]) => {
 		intext
 			.split("")
 			.map(char => findLetter(char) || findLetter("["))
-			.join(""),
+			.join("+"),
 	);
 	outv.set(
 		intext
