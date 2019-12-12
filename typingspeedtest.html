@@ -51,7 +51,9 @@ transform:translate(-3px,0);
 </style>
 </head>
 <body>
-<div class="stats"><div id="time"></div><div id="wpm">...</div><div id="cpm">...</div><div id="err">...</div></div>
+<div class="stats"><div id="time"></div
+  ><div id="wpm">...</div><div id="cpm"
+  >...</div><div id="err">...</div><label> <input id="checkbox" type="checkbox" /> Live Update</label></div>
 <div id="out"></div>
 <textarea id="in"></textarea>
 
@@ -81,9 +83,10 @@ const wpm = document.getElementById("wpm");
 const cpm = document.getElementById("cpm");
 const err = document.getElementById("err");
 const time = document.getElementById("time");
+  const checkbox = document.getElementById("checkbox");
 
-setInterval(() => {
-if(!startTime) {return;}
+  function updateThing(){
+    if(!startTime) {return;}
 let cTime = new Date().getTime();
 let dTime = cTime - startTime;
 let cpmval = (_in.value.length / (dTime / 1000 / 60));
@@ -91,6 +94,11 @@ let cpmval = (_in.value.length / (dTime / 1000 / 60));
 cpm.textContent = cpmval.toFixed(0) + " cpm";
 wpm.textContent = (cpmval / 5).toFixed(0) + " wpm";
 
+
+  }
+  
+setInterval(() => {
+if(checkbox.checked) updateThing()
 }, 100);
 
 
@@ -109,9 +117,10 @@ return elem;
 
 let prevVal = [];
 
-_in.addEventListener("input", e => { // keyUp?
-
   _in.value = "";
+
+_in.addEventListener("input", e => { // keyUp?
+  setTimeout(() => updateThing(), 0); // like defer but not
   
 if(!startTime) {startTime = new Date().getTime();}
 
