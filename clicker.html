@@ -1,0 +1,205 @@
+<html>
+<head>
+<!-- meta tag -->
+<title>clicker game</title>
+<style￼>
+.buyable{
+
+color: green;
+
+}
+.tooexpensive{
+
+color: red;
+
+}
+
+</style￼>
+</head>
+<body>
+
+<script>
+
+// this code was originally written first try (1 error where I said createTextElement instead of createTextNode)
+// changes have been made since then
+
+let gameUpdateHandlers/*: (() => void)[]*/ = [];
+let tickHandlers = [];
+
+setInterval(() => {
+// gameTick();
+tickHandlers.forEach(th => th());
+emitGameUpdate();
+}, 100)
+
+function emitGameUpdate(){
+gameUpdateHandlers.forEach(h => h());
+}
+
+function onGameUpdate(cb){
+gameUpdateHandlers.push(cb);
+cb();
+}
+
+let main = document.getElementById("main") || document.body;
+let el = (name, cb) => {
+let element = document.createElement(name);
+cb && cb(element);
+return element;
+
+}
+
+function BuyButton(game, details){
+
+let node = el("div");
+let button = el("button");
+
+let price = Object.entries(details.price);
+let effects = [...Object.entries(details.effects), ...price.map(([k,v]) => [k, -v])];
+
+let priceElem = el("div");
+let effectsElem = el("div");
+priceElem.appendChild(document.createTextNode( "price: " ));
+effectsElem.appendChild(document.createTextNode( "effects: " ));
+
+for(let [name, cost] of price){
+
+let n = el("span");
+let tn = document.createTextNode("");
+onGameUpdate(() => {
+
+tn.nodeValue = "(" + game.numberFormat(cost) + " " + name + ")";
+if(game.money[name] >= cost){
+n.setAttribute("class", "buyable")
+}else{
+n.setAttribute("class", "tooexpensive");
+}
+
+});
+n.appendChild(tn);
+priceElem.appendChild(n);
+
+}
+
+for(let [name, cost] of effects){
+
+let n = el("span");
+let tn = document.createTextNode("");
+onGameUpdate(() => {
+
+tn.nodeValue = "(" + game.numberFormat(cost) + " " + name + ")";
+
+});
+n.appendChild(tn);
+effectsElem.appendChild(n);
+
+}
+
+let checkPrice = () => price.every(([k,v]) => game.money[k] >= v);
+
+onGameUpdate(() => {
+
+button.disabled =! checkPrice();
+
+});
+
+button.appendChild(document.createTextNode(details.name));
+
+button.addEventListener("click", () => {
+
+setTimeout(() => emitGameUpdate(), 0);
+
+if(!checkPrice()) return;
+
+for(let [key, value] of effects){
+game.money[key] += value;
+}
+
+});
+
+node.appendChild(button);
+node.appendChild(priceElem);
+node.appendChild(effectsElem);
+return node;
+
+}
+
+function Counter(game, currency){
+
+let node = el("div");
+
+let tn = document.createTextNode("");
+
+onGameUpdate(() => {
+
+tn.nodeValue = currency + ": " + game.numberFormat(game.money[currency]);
+
+});
+
+node.appendChild(tn);
+
+return node;
+
+}
+
+function Game(){
+
+let node = el("div");
+
+let game = {
+money: {
+gold: 0,
+market: 0,
+stamina: 0,
+},
+numberFormatMode: "standard",
+numberFormat: (n) => {
+let nfm = game.numberFormatMode;
+if(nfm === "log"){
+let p = "";
+if(n < 0) n = -n; p = "[-]";
+n = (Math.log(n)/Math.log(10))+1;
+if(!n) return "None"; // NaN
+return p + n.toFixed(2);
+}else if(nfm === "hex"){
+return (n.toString(16));
+}
+return n.toFixed(2);
+},
+};
+
+node.appendChild(Counter(game, "gold"));
+node.appendChild(Counter(game, "stamina"));
+
+node.appendChild(BuyButton(game, {
+name: "fish gold from wishing well",
+price: {stamina: 0.1},
+effects: {gold: 1},
+}));
+
+node.appendChild(Counter(game, "market"));
+
+node.appendChild(BuyButton(game, {
+name: "purchase market",
+price: {gold: 25},
+effects: {market: 1},
+}));
+
+tickHandlers.push(() => {
+
+game.money.gold += game.money.market;
+if(game.money.stamina < 1) game.money.stamina += 0.01;
+
+});
+
+return node;
+
+}
+
+document.body.appendChild(Game());
+
+
+</script>
+
+</body>
+</html>
