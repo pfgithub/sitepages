@@ -178,23 +178,27 @@ return n.toFixed(2);
     ["counter", "gold", "gold lets you purchase things"],
     ["counter", "stamina", "stamina increases 0.01 per tick, max 1"],
     ["counter", "market", "markets aquire 0.01 gold per tick"],
+    ["button", {
+      name: "fish gold from wishing well",
+      price: {stamina: 0.1},
+      effects: {gold: 1},
+    }],
+    ["button", {
+      name: "purchase market",
+      price: {gold: 25},
+      effects: {market: 1},
+    }],
   ];
   
-node.appendChild(Counter(game, "gold", "gold lets you purchase things"));
-node.appendChild(Counter(game, "stamina", "stamina increases 0.01 per tick, max 1"));
-node.appendChild(Counter(game, "market", "markets aquire 0.01 gold per tick"));
-
-node.appendChild(BuyButton(game, {
-name: "fish gold from wishing well",
-price: {stamina: 0.1},
-effects: {gold: 1},
-}));
-
-node.appendChild(BuyButton(game, {
-name: "purchase market",
-price: {gold: 25},
-effects: {market: 1},
-}));
+  for(let [action, ...spec] of gameConfig){
+    if(action === "counter"){
+      node.appendChild(Counter(game, ...spec));
+    }else if(action === "button"){
+      node.appendChild(BuyButton(game, ...spec));
+    }else{
+      node.appendChild(document.createTextNode("error: "+action));
+    }
+  }
 
 tickHandlers.push(() => {
 
