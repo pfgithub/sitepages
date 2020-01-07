@@ -125,10 +125,13 @@ return node;
 
 }
 
-function Counter(game, currency){
+function Counter(game, currency, description){
 
 let node = el("div");
 
+  let heading = document.createElement("h1");
+  let p =document.createElement("p");
+  p.appendChild(description);
 let tn = document.createTextNode("");
 
 onGameUpdate(() => {
@@ -137,7 +140,9 @@ tn.nodeValue = currency + ": " + game.numberFormat(game.money[currency]);
 
 });
 
-node.appendChild(tn);
+  heading.appendChild(tn);
+node.appendChild(heading);
+  description && node.appendChild(p);
 
 return node;
 
@@ -169,16 +174,15 @@ return n.toFixed(2);
 },
 };
 
-node.appendChild(Counter(game, "gold"));
-node.appendChild(Counter(game, "stamina"));
+node.appendChild(Counter(game, "gold", "gold lets you purchase things"));
+node.appendChild(Counter(game, "stamina", "stamina increases 0.01 per tick, max 1"));
+node.appendChild(Counter(game, "market", "markets aquire 0.01 gold per tick"));
 
 node.appendChild(BuyButton(game, {
 name: "fish gold from wishing well",
 price: {stamina: 0.1},
 effects: {gold: 1},
 }));
-
-node.appendChild(Counter(game, "market"));
 
 node.appendChild(BuyButton(game, {
 name: "purchase market",
@@ -188,7 +192,7 @@ effects: {market: 1},
 
 tickHandlers.push(() => {
 
-game.money.gold += game.money.market;
+game.money.gold += game.money.market * 0.01;
 if(game.money.stamina < 1) game.money.stamina += 0.01;
 
 });
