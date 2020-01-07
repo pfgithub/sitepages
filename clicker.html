@@ -134,9 +134,12 @@ let node = el("p");
   p.appendChild(document.createTextNode(description));
 let tn = document.createTextNode("");
 
+
 onGameUpdate(() => {
 
-tn.nodeValue = currency + ": " + game.numberFormat(game.money[currency]);
+  let delta = game.money[currency] - game.prevMoney[currency];
+  
+tn.nodeValue = currency + ": " + game.numberFormat(game.money[currency]) + " ("+game.numberFormat(delta)+")";
 
 });
 
@@ -158,6 +161,7 @@ gold: 0,
 market: 0,
 stamina: 0,
 },
+  prevMoney: {},
 numberFormatMode: "standard",
 numberFormat: (n) => {
 let nfm = game.numberFormatMode;
@@ -170,7 +174,7 @@ return p + n.toFixed(2);
 }else if(nfm === "hex"){
 return (n.toString(16));
 }
-return n.toFixed(2);
+return (Math.sign(n) === 1 ? "+" : "") + n.toFixed(2);
 },
 };
 
@@ -202,6 +206,8 @@ return n.toFixed(2);
 
 tickHandlers.push(() => {
 
+  game.prevMoney = {...game.money};
+  
 game.money.gold += game.money.market * 0.01;
 if(game.money.stamina < 1) game.money.stamina += 0.01;
 
