@@ -127,10 +127,10 @@ return node;
 
 function Counter(game, currency, description){
 
-let node = el("div");
+let node = el("p");
 
-  let heading = document.createElement("h1");
-  let p =document.createElement("p");
+  let heading = document.createElement("div");
+  let p =document.createElement("div");
   p.appendChild(document.createTextNode(description));
 let tn = document.createTextNode("");
 
@@ -174,6 +174,12 @@ return n.toFixed(2);
 },
 };
 
+  let gameConfig = [
+    ["counter", "gold", "gold lets you purchase things"],
+    ["counter", "stamina", "stamina increases 0.01 per tick, max 1"],
+    ["counter", "market", "markets aquire 0.01 gold per tick"],
+  ];
+  
 node.appendChild(Counter(game, "gold", "gold lets you purchase things"));
 node.appendChild(Counter(game, "stamina", "stamina increases 0.01 per tick, max 1"));
 node.appendChild(Counter(game, "market", "markets aquire 0.01 gold per tick"));
