@@ -131,7 +131,7 @@ let node = el("div");
 
   let heading = document.createElement("h1");
   let p =document.createElement("p");
-  p.appendChild(description);
+  p.appendChild(document.createTextNode(description));
 let tn = document.createTextNode("");
 
 onGameUpdate(() => {
