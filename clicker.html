@@ -395,6 +395,18 @@
 					}
 				}
 
+				let counterConfig = {
+					stamina: { displayMode: "percentage" }, // 100%, 50%
+					tree: { displayMode: "numberpercentage" }, // 1
+					seed: { displayMode: "numberpercentage" }, // 2 and 10%
+					gold: { displayMode: "twodecimal" }, // 1.00, 2.50
+					_ach1: { initialValue: 1 },
+					_ach2: { initialValue: 1 }
+				};
+
+				// todo fix apples
+				// todo usages history so if you hoveer over (+0.1) it shows you where it's coming from
+
 				let gameConfig = [
 					["counter", "achivement", "number of achivements you have recieved"],
 					[
