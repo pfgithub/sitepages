@@ -340,16 +340,10 @@
 					tick: 0,
 					money: {
 						//gold: 0,
-						market: 0,
 						//stamina: 0,
-						ticks: 0,
-						//_ach1: 1,
-						achivement: 0,
+						achievement: 0,
 						apple: 0,
 						water: 0,
-						//tree: 0,
-						//seed: 0,
-						//_ach2: 1,
 						bucket: 0
 					},
 					settings: {
@@ -418,8 +412,8 @@
 					tree: { displayMode: "numberpercentage" }, // 1
 					seed: { displayMode: "numberpercentage" }, // 2 and 10%
 					gold: { displayMode: "twodecimal", displaySuffix: "ᵹ" }, // 1.00, 2.50
-					_ach1: { initialValue: 1 },
-					_ach2: { initialValue: 1 }
+					_ach_1: { initialValue: 1 },
+					_ach_2: { initialValue: 1 }
 				};
 				game.counterConfig = counterConfig;
 
@@ -433,22 +427,22 @@
 				// todo usages history so if you hoveer over (+0.1) it shows you where it's coming from
 
 				let gameConfig = [
-					["counter", "achivement", "number of achivements you have recieved"],
+					["counter", "achievement", "number of achievements you have recieved"],
 					[
 						"button",
 						{
 							name: "collect 100 gold",
 							requirements: { gold: 100 },
-							price: { _ach1: 1 },
-							effects: { achivement: 1 }
+							price: { _ach_1: 1 },
+							effects: { achievement: 1 }
 						}
 					],
 					[
 						"button",
 						{
 							name: "eat apple",
-							price: { apple: 1, _ach2: 1 },
-							effects: { achivement: 1 }
+							price: { apple: 1, _ach_2: 1 },
+							effects: { achievement: 1 }
 						}
 					],
 					["separator"],
