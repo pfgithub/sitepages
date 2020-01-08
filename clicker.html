@@ -200,7 +200,7 @@
 					onGameUpdate(() => {
 						tn.nodeValue =
 							"(" +
-							game.numberFormat(cost, false) +
+							game.numberFormat(name, cost, false) +
 							" " +
 							(game.uncoveredCounters[name] ? name : "???") +
 							")";
@@ -220,7 +220,7 @@
 					onGameUpdate(() => {
 						tn.nodeValue =
 							"(" +
-							game.numberFormat(cost, false) +
+							game.numberFormat(name, cost, false) +
 							" " +
 							(game.uncoveredCounters[name] ? name : "???") +
 							")";
@@ -243,7 +243,8 @@
 							let n = el("span");
 							let tn = document.createTextNode("");
 							onGameUpdate(() => {
-								tn.nodeValue = "(" + game.numberFormat(cost) + " " + name + ")";
+								tn.nodeValue =
+									"(" + game.numberFormat(name, cost) + " " + name + ")";
 							});
 							n.appendChild(tn);
 							effectsElem.appendChild(n);
@@ -317,8 +318,8 @@
 					tn.nodeValue =
 						currency +
 						": " +
-						game.numberFormat(count, false) +
-						(average ? " (" + game.numberFormat(average) + ")" : "");
+						game.numberFormat(currency, count, false) +
+						(average ? " (" + game.numberFormat(currency, average) + ")" : "");
 				});
 
 				heading.appendChild(tn);
@@ -338,17 +339,17 @@
 				let game = {
 					tick: 0,
 					money: {
-						gold: 0,
+						//gold: 0,
 						market: 0,
-						stamina: 0,
+						//stamina: 0,
 						ticks: 0,
-						_ach1: 1,
+						//_ach1: 1,
 						achivement: 0,
 						apple: 0,
 						water: 0,
-						tree: 0,
-						seed: 0,
-						_ach2: 1,
+						//tree: 0,
+						//seed: 0,
+						//_ach2: 1,
 						bucket: 0
 					},
 					settings: {
@@ -356,8 +357,23 @@
 					},
 					moneyHistory: [],
 					uncoveredCounters: { stamina: true },
-					numberFormat: (n, showSign = true) => {
-						let nfm = game.settings.numberFormatMode;
+					numberFormat: (currency, n, showSign = true) => {
+						let currencyDetails = game.counterConfig[currency] || {};
+
+						let displayMode = currencyDetails.displayMode || "default";
+						let suffix = currencyDetails.displaySuffix || "";
+
+						if (displayMode === "percentage") {
+							let resStr = (n * 100).toFixed(0);
+
+							return (
+								(showSign && Math.sign(n) === 1 && resStr !== "0" ? "+" : "") +
+								resStr +
+								(suffix || "%")
+							);
+						}
+
+						/*let nfm = game.settings.numberFormatMode;
 						if (nfm === "log") {
 							let p = "";
 							if (n < 0) {
@@ -369,11 +385,13 @@
 							return p + n.toFixed(2);
 						} else if (nfm === "hex") {
 							return n.toString(16);
-						}
+						}*/
 						let resV = n.toFixed(2);
 						if (resV === "-0.00") resV = "0.00";
 						resV = resV.replace(/\.?0*$/, "");
-						return (showSign && Math.sign(+resV) === 1 ? "+" : "") + resV;
+						return (
+							(showSign && Math.sign(+resV) === 1 ? "+" : "") + resV + suffix
+						);
 					}
 				};
 
@@ -399,12 +417,19 @@
 					stamina: { displayMode: "percentage" }, // 100%, 50%
 					tree: { displayMode: "numberpercentage" }, // 1
 					seed: { displayMode: "numberpercentage" }, // 2 and 10%
-					gold: { displayMode: "twodecimal" }, // 1.00, 2.50
+					gold: { displayMode: "twodecimal", displaySuffix: "ᵹ" }, // 1.00, 2.50
 					_ach1: { initialValue: 1 },
 					_ach2: { initialValue: 1 }
 				};
+				game.counterConfig = counterConfig;
 
-				// todo fix apples
+				for (let [key, value] of Object.entries(counterConfig)) {
+					if (game.money[key] == null) {
+						game.money[key] = value.initialValue || 0;
+					}
+				}
+
+				// todo fix apples on mac safari
 				// todo usages history so if you hoveer over (+0.1) it shows you where it's coming from
 
 				let gameConfig = [
@@ -488,6 +513,15 @@
 							name: "use bucket on wishing well",
 							price: { bucket: 1, stamina: 1 },
 							effects: { water: 1000, gold: 10 }
+						}
+					],
+					[
+						"button",
+						{
+							name: "sell apples",
+							requirements: { market: 25 },
+							price: { apple: 100 },
+							effects: { gold: 1000 }
 						}
 					]
 				];
