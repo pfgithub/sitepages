@@ -111,7 +111,7 @@
 			let gameUpdateHandlers /*: (() => void)[]*/ = [];
 			let tickHandlers = [];
 
-			setInterval(() => {
+			let tickInterval = setInterval(() => {
 				// gameTick();
 				tickHandlers.forEach(th => th());
 				emitGameUpdate();
@@ -332,6 +332,9 @@
 				let node = el("div");
 				node.classList.add("gameroot");
 
+				let saveID = +(localStorage.getItem("lastsave") || "0") + 1;
+				localStorage.setItem("lastsave", saveID);
+
 				let game = {
 					tick: 0,
 					money: {
@@ -502,6 +505,16 @@
 					if (game.moneyHistory.length >= 5) game.moneyHistory.shift();
 
 					if (game.tick % 50 === 0) {
+						let newSaveID = +localStorage.getItem("lastsave");
+						console.log(saveID, newSaveID);
+						if (newSaveID !== saveID) {
+							document.body.innerHTML =
+								"Uh oh! This page was opened on another tab. This page has been closed to prevent save conflicts.";
+							document.title = "closed";
+							window.close();
+							clearInterval(tickInterval);
+							throw -1;
+						}
 						localStorage.setItem(
 							"save",
 							JSON.stringify(
