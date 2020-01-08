@@ -154,7 +154,7 @@
 				let uncoverStatusChanged = [];
 				let onUncover = cb => (uncoverStatusChanged.push(cb), cb());
 
-				let uncovered = false;
+				let uncovered = false; // todo save this somehow
 				let uncoveredThisTick = { tick: -1, uncovered: false };
 				let checkPrice = () => price.every(([k, v]) => game.money[k] >= v);
 				let getUncovered = () => {
@@ -344,7 +344,9 @@
 						apple: 0,
 						water: 0,
 						tree: 0,
-						seed: 0
+						seed: 0,
+						_ach2: 1,
+						bucket: 0
 					},
 					settings: {
 						numberFormatMode: "standard"
@@ -395,9 +397,17 @@
 					[
 						"button",
 						{
-							name: "achivement: collect 100 gold",
+							name: "collect 100 gold",
 							requirements: { gold: 100 },
 							price: { _ach1: 1 },
+							effects: { achivement: 1 }
+						}
+					],
+					[
+						"button",
+						{
+							name: "eat apple",
+							price: { apple: 1, _ach2: 1 },
 							effects: { achivement: 1 }
 						}
 					],
@@ -427,7 +437,7 @@
 					[
 						"counter",
 						"tree",
-						"occasionally drops apples. each full tree requires 2 water each tick to live."
+						"each full tree requires 2 water each tick to live and drops 1 apple per 10 ticks."
 					],
 					["counter", "seed", "an apple seed. uses 1 water each tick to grow"],
 					[
@@ -442,13 +452,29 @@
 					[
 						"button",
 						{
-							name: "take water from well",
+							name: "take water from wishing well",
 							price: { stamina: 1 },
 							requirements: { market: 5 },
 							effects: { water: 100 }
 						}
 					],
-					["button", { name: "eat apple", price: { apple: 1 } }]
+					["counter", "bucket", "a bucket"],
+					[
+						"button",
+						{
+							name: "make bucket",
+							price: { tree: 1, gold: 100 },
+							effects: { bucket: 1 }
+						}
+					],
+					[
+						"button",
+						{
+							name: "use bucket on wishing well",
+							price: { bucket: 1, stamina: 1 },
+							effects: { water: 1000, gold: 10 }
+						}
+					]
 				];
 
 				let addItem = ([action, ...spec]) => {
@@ -497,18 +523,25 @@
 						if (game.money.stamina < 1) game.money.stamina += 0.01;
 
 						let bal = game.money;
+						if (bal.tree < 0) bal.tree = 0;
 						let treeWaterCost = 2;
 						let liveTreeCount = Math.floor(bal.tree);
 						let requiredWater = liveTreeCount;
 						let availableWater = Math.floor(bal.water / treeWaterCost);
 						if (bal.tick % 10 === 0) bal.apple += liveTreeCount;
 						let deadTrees = requiredWater - availableWater;
-						if (deadTrees > 0) bal.tree -= deadTrees;
+						if (deadTrees > 0) {
+							bal.tree -= 0.02 * deadTrees;
+						}
+						if (bal.water < 2 && deadTrees <= 0 && bal.tree > 0) {
+							bal.tree -= 0.01;
+						}
 						bal.water -=
 							Math.min(requiredWater, availableWater) * treeWaterCost;
 
 						if (bal.seed > 0) {
 							game.uncoveredCounters.tree = true;
+							game.uncoveredCounters.apple = true;
 							if (bal.water > 1) {
 								bal.seed -= 0.01;
 								bal.tree += 0.01;
