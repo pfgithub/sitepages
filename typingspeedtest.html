@@ -47,13 +47,14 @@ textarea{
 transform:translate(-3px,0);
 }
   }
+  #buttons{display:grid}
   
 </style>
 </head>
 <body>
 <div class="stats"><div id="time"></div
   ><div id="wpm">...</div><div id="cpm"
-  >...</div><div id="err">...</div><label> <input id="checkbox" type="checkbox" /> Live Update</label></div>
+  >...</div><div id="err">...</div><label> <input id="checkbox" type="checkbox" /> Live Update</label></div><div id="buttons"></div>
 <div id="out"></div>
 <textarea id="in"></textarea>
 
@@ -64,11 +65,42 @@ transform:translate(-3px,0);
  `The @supports CSS at-rule lets you specify declarations that depend on a browser's support for one or more specific CSS features. This is called a feature query. The rule may be placed at the top level of your code or nested inside any other conditional group at-rule.`,
  `@media supports (-webkit-overflow-scrolling: touch) {\n  textarea {\n    transform: translate(-3px, 0);\n  }\n}`,
  `Today, historians relate that, as a general rule, buying and selling securities was very much unorganized before the year 1792. Every person who owned a security faced the problem of finding interested buyers who might consider the purchase of a debt-free investment. This meant most people were somewhat slow in investing in stocks and bonds because these securities could not readily be converted into money. We have been told that an interesting number of traders and merchants agreed to try to do something to help correct the situation. At this first crucial meeting, they decided that it was a good idea to visit regularly on a daily basis to buy and sell securities. The group of leaders, whose meeting place was under an old, tall cottonwood tree, found the needed time to plot the financial future of our nation. We know from reading the old records that the original team who met together long ago in May became the very first members of the New York Stock Exchange. The New York Stock Exchange is still operating. Other stock exchanges conduct business in many countries around the world. Thousands and thousands of stocks and bonds are bought and sold each day.`,
-  
+  `let heading = document.createElement("h1");\nheading.appendChild(document.createTextNode("Page Heading"));\ndocument.body.appendChild("heading");`,
   
   ];
   
-  let sentence = sentences[Math.floor(Math.random() * sentences.length)];
+  let loc = document.getElementById("buttons");
+  
+const _in = document.getElementById("in");
+  
+  let picktext = document.createElement("h1");
+  picktext.appendChild(document.createTextNode("pick text"));
+  loc.appendChild(picktext);
+  
+  let choices = sentences.map(s => {
+  let desc = s.substr(0, 35) + "...";
+    let btn = document.createElement("button");
+    btn.appendChild(document.createTextNode(desc));
+    btn.onclick = (e) => {
+      loc.remove();
+      _in.value = "";
+      start(s);
+    };
+    loc.appendChild(btn);
+  });
+  
+  let custombtn = document.createElement("button");
+  custombtn.appendChild(document.createTextNode("Custom (type below)"));
+    custombtn.onclick = (e) => {
+      loc.remove();
+      let t = _in.value;
+      _in.value = "";
+      start(t);
+    };
+  loc.appendChild(custombtn);
+  
+  
+  function start(sentence){
   
  
 
@@ -76,7 +108,6 @@ transform:translate(-3px,0);
 let startTime = undefined;
 let errors = 0;
 
-const _in = document.getElementById("in");
 const out = document.getElementById("out");
 
 const wpm = document.getElementById("wpm");
@@ -145,7 +176,7 @@ elem.classList.remove("word-incorrect");
 
 if(v === undefined) {
   elem.classList.add("word-untyped");
-  elem.textContent = chars[i];
+  elem.textContent = chars[i]; // todo .nodeValue because it's faster
 } else {
   elem.classList.add(v === chars[i] ? "word-correct" : "word-incorrect"  )
 elem.textContent = v;
@@ -160,6 +191,8 @@ prevVal = curr;
 
 
 });
+    
+  }
 
 </script>
 </body>
