@@ -56,7 +56,7 @@
           transform: translate(-3px, 0);
         }
       }
-      #buttons {
+      .buttonsc {
         display: grid;
       }
     </style>
@@ -81,36 +81,60 @@
         `The first personnel management department started at the National Cash Register Co. in 1900. The owner, John Henry Patterson, organized a personnel department to deal with grievances, discharges and safety, and training for supervisors on new laws and practices after several strikes and employee lockouts. During the 1970s, companies experienced globalization, deregulation, and rapid technological change which caused the major companies to enhance their strategic planning and focus on ways to promote organizational effectiveness. This resulted in developing more jobs and opportunities for people to show their skills which were directed to effective applying employees toward the fulfillment of individual, group, and organizational goals. Many years later the major/minor of human resource management was created at universities and colleges also known as business administration.`,
         `The bikers rode down the long and narrow path to reach the city park. When they reached a good spot to rest, they began to look for signs of spring. The sun was bright, and a lot of bright red and blue blooms proved to all that warm spring days were the very best. Spring rides were planned. They had a burger at the lake and then rode farther up the mountain. As one rider started to get off his bike, he slipped and fell. One of the other bikers saw him fall but could do nothing to help him. Neither the boy nor the bike got hurt. After a brief stop, everyone was ready to go on. All the bikers enjoyed the nice view when they came to the top. All the roads far below them looked like ribbons. A dozen or so boats could be seen on the lake. It was very quiet and peaceful and no one wished to leave. As they set out on their return, they all enjoyed the ease of pedaling. The bikers came upon a new bike trail. This route led to scenery far grander than that seen from the normal path. The end of the day brought laughs and cheers from everyone. The fact that each person was very, very tired did not keep anyone from eagerly planning for the exciting ride to come.`
       ];
-
-      let loc = document.getElementById("buttons");
+      let reset = [];
 
       const _in = document.getElementById("in");
+      
+      function doState(state){
+        reset.forEach(m => m()); // closes the current thing
+        reset = [];
+        // does the next thing
+        if(!state){
+          init();
+        }else{
+          start(state.text);
+        }
+      }
+      window.addEventListener("popstate", e => {
+        doState(e.state);
+      })
 
-      let picktext = document.createElement("h1");
-      picktext.appendChild(document.createTextNode("pick text"));
-      loc.appendChild(picktext);
-
-      let choices = sentences.map(s => {
-        let desc = s.substr(0, 35) + "...";
-        let btn = document.createElement("button");
-        btn.appendChild(document.createTextNode(desc));
-        btn.onclick = e => {
+      function init(){
+        let btns = document.getElementById("buttons");
+        let loc = document.createElement("div");
+        loc.classList.add("buttonsc");
+        btns.appendChild(loc);
+        
+        reset.push(() => {
           loc.remove();
           _in.value = "";
-          start(s);
-        };
-        loc.appendChild(btn);
-      });
+        });
+        
+        let picktext = document.createElement("h1");
+        picktext.appendChild(document.createTextNode("pick text"));
+        loc.appendChild(picktext);
 
-      let custombtn = document.createElement("button");
-      custombtn.appendChild(document.createTextNode("Custom (type below)"));
-      custombtn.onclick = e => {
-        loc.remove();
-        let t = _in.value;
-        _in.value = "";
-        start(t);
-      };
-      loc.appendChild(custombtn);
+        let choices = sentences.map(s => {
+          let desc = s.substr(0, 35) + "...";
+          let btn = document.createElement("button");
+          btn.appendChild(document.createTextNode(desc));
+          btn.onclick = e => {
+            history.pushState({text: s}, desc + " | Typing Speed Test");
+            doState({text: s});
+          };
+          loc.appendChild(btn);
+        });
+
+        let custombtn = document.createElement("button");
+        custombtn.appendChild(document.createTextNode("Custom (type below)"));
+        custombtn.onclick = e => {
+          let t = _in.value;
+          history.pushState({text: t}, t.substr(0, 35) + "..." + " | Typing Speed Test");
+          doState({text: t});
+        };
+        loc.appendChild(custombtn);
+      }
+      init();
 
       function start(sentence) {
         let startTime = undefined;
@@ -136,9 +160,18 @@
           wpm.textContent = (cpmval / 5).toFixed(0) + " wpm";
         }
 
-        setInterval(() => {
+        let interval = setInterval(() => {
           if (checkbox.checked) updateThing();
         }, 100);
+        
+        reset.push(() => {
+          clearInterval(interval);
+          _in.value = "";
+          wpm.textContent = "...";
+          cpm.textContent = "...";
+          err.textContent = "...";
+          out.innerHTML = "";
+        });
 
         let chars = sentence.split("");
         let afternewline = false;
@@ -166,6 +199,13 @@
 
           if (!startTime) {
             startTime = new Date().getTime();
+          }
+          
+          if(!_in.value) {
+            startTime = undefined;
+            wpm.textContent = "...";
+            cpm.textContent = "...";
+            err.textContent = "...";
           }
 
           let curr = _in.value.split("");
