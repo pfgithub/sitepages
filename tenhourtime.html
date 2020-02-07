@@ -11,8 +11,10 @@ layout: default
 
 while(true){
 
-let now = await new Promise(r => window.requestAnimationFrame(r));
+await new Promise(r => window.requestAnimationFrame(r));
 
+let now = new Date().getTime();
+  
 var start = new Date(now);
 start.setUTCHours(0,0,0,0);
 
