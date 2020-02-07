@@ -23,7 +23,7 @@ let startTime = start.getTime();
 let dayTime = now - startTime;
 let percent = dayTime / (24 * 60 * 60 * 1000);
 
-let text = percent.toLocaleString(null, {style: "percent"});
+let text = percent.toLocaleString(undefined, {style: "percent", minimumFractionDigits: 4});
 
 document.getElementById("text").textContent = text;
 
