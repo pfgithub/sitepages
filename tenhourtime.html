@@ -1,0 +1,32 @@
+---
+title: 10-hour time
+layout: default
+---
+
+<div id="text">...</div>
+
+<script>
+
+((async() => {
+
+while(true){
+
+let now = await new Promise(r => window.requestAnimationFrame(r));
+
+var start = new Date(now);
+start.setUTCHours(0,0,0,0);
+
+let startTime = start.getTime();
+
+let dayTime = now - startTime;
+let percent = dayTime / (24 * 60 * 60 * 1000);
+
+let text = percent.toLocaleString(null, {style: "percent"});
+
+document.getElementById("time").textContent = text;
+
+}
+
+}))();
+
+</script>
