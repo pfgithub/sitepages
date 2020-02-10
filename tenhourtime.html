@@ -22,8 +22,12 @@ let startTime = start.getTime();
 
 let dayTime = now - startTime;
 let percent = dayTime / (24 * 60 * 60 * 1000);
+  
+  let value =percent * 100000000;
+  
+  let text = `${Math.floor((value / 1000000) % 100).toString().padStart(2, '0')}LL ${Math.floor((value / 100000) % 10).toString().padStart(1, '0')}cc ${Math.floor((value / 1000) % 100).toString().padStart(2, '0')}ii ${Math.floor((value / 1) % 1000).toString().padStart(3, '0')}qm`;
 
-let text = percent.toLocaleString(undefined, {style: "percent", minimumFractionDigits: 6});
+//let text = percent.toLocaleString(undefined, {style: "percent", minimumFractionDigits: 6});
 
 document.getElementById("text").textContent = text;
 
