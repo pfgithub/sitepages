@@ -22,6 +22,8 @@ layout: default
     [[1000, "mb"], [1, "gb"]],
     [[1000, "gb"], [1, "tb"]],
     [[1000, "tb"], [100, "pb"]],
+    [[360, "deg"], [2, "π*rad"]],
+    [[1, "π*rad"], [Math.PI, "rad"]],
   ];
   
   let units = [...new Set(conversions.flatMap( ([[t1, u1], [t2, u2]]) => [u1, u2]) )];
