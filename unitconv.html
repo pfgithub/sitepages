@@ -1,0 +1,92 @@
+---
+title: unitconv
+layout: default
+---
+
+<div id="conv">...</div>
+
+<script>
+
+{
+  let conversions = [
+    [[1000, "ms"], [1, "sec"]],
+    [[60, "sec"], [1, "min"]],
+    [[60, "min"], [1, "hr"]],
+    [[24, "hr"], [1, "day"]],
+    [[1, "day"], [10, "LL"]],
+    [[1, "LL"], [10, "cc"]],
+    [[1, "cc"], [100, "ii"]],
+    [[1, "ii"], [1000, "qm"]],
+  ];
+  
+  let units = [...new Set(conversions.flatMap( ([[t1, u1], [t2, u2]]) => [u1, u2]) )];
+
+  let node = document.getElementById("conv") || document.body;
+  node.innerHTML = "";
+  
+  let input = document.createElement("input");
+  input.type = "number";
+  input.step = "any";
+  
+  let unitresults = [];
+  let unitresultslist = document.createElement("ul");
+  
+  let unitsel = document.createElement("select");
+  for(let unit of units){
+    let option = document.createElement("option");
+    option.appendChild(document.createTextNode(unit));
+    option.name = unit;
+    unitsel.appendChild(option);
+    
+    let resultitem = document.createElement("li");
+    resultitem.appendChild(document.createTextNode(unit + ": "));
+    let ptn = document.createTextNode("...");
+    unitresults.push({unit, ptn});
+    resultitem.appendChild(ptn);
+    unitresultslist.appendChild(resultitem);
+  }
+  
+  let onupdate = () => {
+    let inputUnit = unitsel.value;
+    let inputNumber = +input.value;
+    
+    let results = {[inputUnit]: inputNumber};
+    let availableUnits = [inputUnit];
+    while(availableUnits.length){
+      let unit = availableUnits.pop();
+      let value = results[unit];
+      let nextUnits = conversions.filter( ([[t1, u1], [t2, u2]]) => u1 === unit || u2 === unit );
+      for(let [[t1, u1], [t2, u2]] of nextUnits) {
+        let fromunit;
+        let tounit;
+        let ratio;
+        if(u1 === unit){
+          ratio = t1 / t2;
+          fromunit = u1;
+          tounit = u2;
+        }else{
+          ratio = t2 / t1;
+          fromunit = u2;
+          tounit = u1;
+        }
+        if(results[tounit] !== undefined) continue;
+        results[tounit] = value * ratio;
+        availableUnits.push(tounit);
+      }
+    }
+    for(let {unit, ptn} of unitresults){
+      ptn.nodeValue = "" + results[unit]
+    }
+  };
+  
+  unitsel.addEventListener("change", onupdate, {passive: true});
+  input.addEventListener("input", onupdate, {passive: true});
+  onupdate();
+  
+  node.appendChild(input);
+  node.appendChild(unitsel);
+  node.appendChild(unitresultslist);
+
+}
+
+</script>
