@@ -41,9 +41,8 @@ layout: default
   }
   
   let onupdate = (inputUnit, inputNumber) => {
-    
     let results = {[inputUnit]: inputNumber};
-    let availableUnits = [inputUnit];
+    let availableUnits = isNaN(inputNumber) ? [] : [inputUnit];
     while(availableUnits.length){
       let unit = availableUnits.pop();
       let value = results[unit];
@@ -67,12 +66,13 @@ layout: default
       }
     }
     for(let {unit, ptn} of unitresults){
-      ptn.value = "" + results[unit]
+      if(unit == inputUnit) continue;
+      ptn.value = "" + (results[unit] || "");
     }
   };
   
   for(let {unit, ptn} of unitresults){
-    ptn.addEventListener("input", () => onupdate(unit, ptn.value), {passive: true});
+    ptn.addEventListener("input", () => onupdate(unit, +ptn.value), {passive: true});
   }
   
   onupdate("ms", 0);
