@@ -24,31 +24,23 @@ layout: default
   let node = document.getElementById("conv") || document.body;
   node.innerHTML = "";
   
-  let input = document.createElement("input");
-  input.type = "number";
-  input.step = "any";
-  
   let unitresults = [];
   let unitresultslist = document.createElement("ul");
   
-  let unitsel = document.createElement("select");
   for(let unit of units){
-    let option = document.createElement("option");
-    option.appendChild(document.createTextNode(unit));
-    option.name = unit;
-    unitsel.appendChild(option);
-    
     let resultitem = document.createElement("li");
     resultitem.appendChild(document.createTextNode(unit + ": "));
-    let ptn = document.createTextNode("...");
+    let ptn = document.createElement("input");
+    ptn.type = "number";
+    ptn.step = "any";
+    ptn.placeholder = "...";
+    ptn.value = "";
     unitresults.push({unit, ptn});
     resultitem.appendChild(ptn);
     unitresultslist.appendChild(resultitem);
   }
   
-  let onupdate = () => {
-    let inputUnit = unitsel.value;
-    let inputNumber = +input.value;
+  let onupdate = (inputUnit, inputNumber) => {
     
     let results = {[inputUnit]: inputNumber};
     let availableUnits = [inputUnit];
@@ -75,16 +67,16 @@ layout: default
       }
     }
     for(let {unit, ptn} of unitresults){
-      ptn.nodeValue = "" + results[unit]
+      ptn.value = "" + results[unit]
     }
   };
   
-  unitsel.addEventListener("change", onupdate, {passive: true});
-  input.addEventListener("input", onupdate, {passive: true});
-  onupdate();
+  for(let {unit, ptn} of unitresults){
+    ptn.addEventListener("input", () => onupdate(unit, ptn.value), {passive: true});
+  }
   
-  node.appendChild(input);
-  node.appendChild(unitsel);
+  onupdate("ms", 0);
+  
   node.appendChild(unitresultslist);
 
 }
