@@ -74,6 +74,7 @@ layout: default
     }
     for(let {unit, ptn} of unitresults){
       if(unit == inputUnit) continue;
+      ptn.placeholder = ptn.value || ptn.placeholder || "...";
       ptn.value = "" + (results[unit] || "");
     }
   };
