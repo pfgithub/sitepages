@@ -124,12 +124,12 @@ let time = new Date().getTime();
 let y = gy;
 let dskxq = false;
     
-if(y > lastClick + 12){
+if(y > lastClick + 18){
 add("v", "down", time - lastClickTime);
 document.body.classList.add("down");
 lastClick = y;
 }else
-if(y < lastClick - 12){
+if(y < lastClick - 18){
 add("^", "up", time - lastClickTime);
 document.body.classList.add("up");
 lastClick = y;
