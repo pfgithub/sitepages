@@ -127,19 +127,19 @@ let dskxq = false;
 if(y > lastClick + 12){
 add("v", "down", time - lastClickTime);
 document.body.classList.add("down");
+lastClick = y;
 }else
 if(y < lastClick - 12){
 add("^", "up", time - lastClickTime);
 document.body.classList.add("up");
+lastClick = y;
 }else{
 add("=", "same", time - lastClickTime);
 document.body.classList.add("same");
-  dskxq = true;
 }
 
-lastClick = y;
 lastClickTime = time;
-   dskxq || (document.getElementById("clickline").style.top = "" + lastClick + "px");
+   (document.getElementById("clickline").style.top = "" + lastClick + "px");
     
   }
 
