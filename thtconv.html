@@ -58,7 +58,7 @@ let gms = undefined;
 let fres = el("div");
 let frestn = document.createTextNode("..");
 fres.appendChild(frestn);
-document.body.appendChild(fres);
+mainel.appendChild(fres);
 
 let go = () => {
 console.log(ghrs, gmins, gsecs, gms);
@@ -74,8 +74,8 @@ let textnode = document.createTextNode(nb);
 let inputel = el("input");
 inputel.placeholder = th();
 intervals.push(setInterval(() => inputel.placeholder = th(), 10000));
-document.body.appendChild(inputel);
-document.body.appendChild(textnode);
+mainel.appendChild(inputel);
+mainel.appendChild(textnode);
 inputel.oninput = () => {
 v.v = isNaN(+inputel.value) ? null : +inputel.value;
 go();
