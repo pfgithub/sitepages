@@ -1,0 +1,91 @@
+---
+title: 10-hour time
+layout: default
+---
+
+<div id="main">...</div>
+
+<script>
+{
+
+let mainel = document.getElementById("main") || document.body;
+let intervals = [];
+
+window.__reset && window.__reset();
+window.__reset = () => {
+mainel.innerHTML = "";
+intervals.forEach(intv => clearInterval(intv));
+}
+
+function gtht(ms) {
+let now = ms;
+  
+var start = new Date(now);
+start.setUTCHours(0,0,0,0);
+
+let startTime = start.getTime();
+
+let dayTime = now - startTime;
+let percent = dayTime / (24 * 60 * 60 * 1000);
+  
+  let value =percent * 100000000;
+  
+  let text = `${Math.floor((value / 1000000) % 100).toString().padStart(2, '0')}LL ${Math.floor((value / 100000) % 10).toString().padStart(1, '0')}cc ${Math.floor((value / 1000) % 100).toString().padStart(2, '0')}ii ${Math.floor((value / 1) % 1000).toString().padStart(3, '0')}qm`;
+
+return text;
+}
+
+function convhms(h, m, s, ms, ampm){
+h = ampm === "pm" ? h + 12 : h;
+let tzoffsetminutes = new Date().getTimezoneOffset();
+
+let d = new Date();
+d.setHours(h);
+d.setMinutes(m);
+d.setSeconds(s);
+d.setMilliseconds(ms);
+
+return {dateStr: d.toString(), tht: gtht(d.getTime())};
+}
+
+let el = (tn) => document.createElement(tn);
+
+let ghrs = undefined;
+let gmins = undefined;
+let gsecs = undefined;
+let gms = undefined;
+
+let fres = el("div");
+let frestn = document.createTextNode("..");
+fres.appendChild(frestn);
+document.body.appendChild(fres);
+
+let go = () => {
+console.log(ghrs, gmins, gsecs, gms);
+if(ghrs == null || gmins == null || gsecs == null || gms == null) return frestn.nodeValue = "...";
+let chms = convhms(ghrs, gmins, gsecs, gms, "am");
+frestn.nodeValue = chms.tht + " — " + chms.dateStr;
+};
+go();
+
+
+let qta = (nb, th, v) => {
+let textnode = document.createTextNode(nb);
+let inputel = el("input");
+inputel.placeholder = th();
+intervals.push(setInterval(() => inputel.placeholder = th(), 10000));
+document.body.appendChild(inputel);
+document.body.appendChild(textnode);
+inputel.oninput = () => {
+v.v = isNaN(+inputel.value) ? null : +inputel.value;
+go();
+}
+}
+
+qta("hr ", () => "" + new Date().getHours(), {get v() {return ghrs}, set v(nv){ghrs = nv}});
+qta("min ", () => "" + new Date().getMinutes(), {get v() {return gmins}, set v(nv){gmins = nv}});
+qta("sec ", () => "" + new Date().getSeconds(), {get v() {return gsecs}, set v(nv){gsecs = nv}});
+qta("ms ", () => "" + new Date().getMilliseconds(), {get v() {return gms}, set v(nv){gms = nv}});
+
+}
+</script>
