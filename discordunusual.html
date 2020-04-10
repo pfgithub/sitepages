@@ -1,0 +1,56 @@
+---
+title: Discord Unusual
+layout: default
+---
+
+<div id="maincontent"></div>
+
+<script>
+{
+let nodeValue = Symbol("node");
+
+function setup(info, cb){
+let doUpdate = () => {
+let resValues = {};
+info.forEach(i => {
+let resValue = i.get ? i.get(i.node) : i.set ? {set: (v) => i.set(i.node, v)} : {};
+resValue[nodeValue] = i.node;
+resValues[i.name] = resValue;
+});
+cb(resValues);
+};
+info.forEach(i => {
+i.node = document.createElement(i.type);
+if(i.change) {i.change(i.node, () => {
+doUpdate();
+})}
+(document.getElementById("maincontent") || document.body).appendChild(i.node);
+});
+doUpdate();
+}
+
+let input = s => ({type: "input", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let textarea = s => ({type: "textarea", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let div = s => ({type: "div", name: s, mode: "set", set: (q,v) => q.textContent = v});
+
+
+setup([textarea("intext"), div("outtext")], ({intext, outtext}) => {
+
+outtext.set(
+
+intext.replace(/./g, c => ({
+
+I: "l",
+l: "I",
+"0": "O",
+"O": "0",
+i: "¡",
+"w": "vv",
+"m": "rn",
+
+})[c] || c)
+
+);
+});
+}
+</script>
