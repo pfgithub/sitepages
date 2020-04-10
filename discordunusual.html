@@ -3,7 +3,7 @@ title: Discord Unusual
 layout: default
 ---
 
-<div id="maincontent"></div>
+<div id="maincontent" style="white-space: pre"></div>
 
 <script>
 {
@@ -38,7 +38,20 @@ setup([textarea("intext"), div("outtext")], ({intext, outtext}) => {
 
 outtext.set(
 
-intext.replace(/./g, c => ({
+intext
+.split("one").join("1")
+.split("two").join("2")
+.split("three").join("3")
+.split("four").join("4")
+.split("five").join("5")
+.split("six").join("6")
+.split("seven").join("7")
+.split("eight").join("8")
+.split("nine").join("9")
+.split("at").join("@")
+.split("d").join("¿")
+.split("ae").join("æ")
+.replace(/./g, c => ({
 
 I: "l",
 l: "I",
