@@ -49,7 +49,6 @@ intext
 .split("eight").join("8")
 .split("nine").join("9")
 .split("at").join("@")
-.split("d").join("¿")
 .split("ae").join("æ")
 .replace(/./g, c => ({
 
@@ -60,7 +59,7 @@ l: "I",
 i: "¡",
 "w": "*v*v",
 "m": "*r*n",
-"e": "ɐ",
+//"e": "ɐ",
 
 
 })[c] || c)
