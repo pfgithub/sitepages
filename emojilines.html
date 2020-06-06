@@ -1,0 +1,39 @@
+---
+title: Emoji🐸︎Lines
+layout: default
+---
+
+<p>
+makes emojis show up as lines (like 🐸︎ instead of 🐸). put emojis in the
+first text box and copy from second text box. does not work for all emojis.
+on some devices it will not work at all.
+</p>
+<div id="maincontent" style="white-space: pre"></div>
+
+{
+
+let body = document.getElementById("maincontent") || document.body;
+body.innerHTML = "";
+let el = (nme) => document.createElement(nme);
+let txt = (txt) => document.createTextNode(txt);
+
+let anychange = (itms, cb) => (itms.forEach(itm => itm.oninput = () => cb()), cb());
+Element.prototype.satr = function(atrs) {Object.entries(atrs).forEach(([k, v]) => this.setAttribute(k, v)); return this;}
+Element.prototype.adto = function(prnt) {prnt.appendChild(this); return this;}
+Element.prototype.adch = function(chld) {this.appendChild(chld); return this;}
+Element.prototype.atxt = function(txta) {this.appendChild(txt(txta)); return this;}
+
+el("style").atxt("textarea {font-size: 3rem}").adto(body);
+let tain = el("textarea").satr({value: "emojis 🐸"}).adto(body);
+tain.defaultValue = "emojis 🐸";
+let taout = el("textarea").satr({readonly: ""}).adto(body);
+
+anychange([tain], () => {
+
+taout.value = [...tain.value].map(q => q + "\uFE0E").join("")
+
+})
+
+}
+
+</script>
