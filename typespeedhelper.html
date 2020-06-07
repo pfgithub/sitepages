@@ -146,7 +146,7 @@ let rn = now();
 if(!lastKey) {firstKey = rn; lastKey = firstKey};
 let thisKey = rn - lastKey;
 lastKey = rn;
-let totalTime = ((rn - firstKey) / 1000).toLocaleString(null, {minimumFractionDigits: 4, maximumFractionDigits: 4});
+let totalTime = ((rn - firstKey) / 1000).toLocaleString('en-US', {minimumFractionDigits: 3, maximumFractionDigits: 3});
 
 if(thisKey > scale) setScale(thisKey);
 allScales.push([lastKey, scale]);
