@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>click recorder playback</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<body>
+<div id="main"></div>
+<script>
+
+
+{
+
+let el = (nme) => document.createElement(nme);
+let txt = (txt) => document.createTextNode(txt);
+let anychange = (itms, cb) => (itms.forEach(itm => itm.oninput = () => cb()), cb());
+Element.prototype.attr = function(atrs) {Object.entries(atrs).forEach(([k, v]) => this.setAttribute(k, v)); return this;}
+Element.prototype.adto = function(prnt) {prnt.appendChild(this); return this;}
+Element.prototype.adch = function(chld) {this.appendChild(chld); return this;}
+Element.prototype.atxt = function(txta) {this.appendChild(txt(txta)); return this;}
+Object.prototype.dwth = function(cb) {cb(this); return this;}
+
+let now = () => new Date().getTime();
+
+let tmbel = (document.getElementById("main") || document.body)
+    .dwth(q => q.innerHTML = "")
+    .adch(el("p").atxt("type. press esc/enter to clear. press backspace to delete."))
+    .adch(el("input").attr({placeholder: "type here on mobile"}));
+let body = el("div").adto(tmbel)
+    .attr({class: "mb"});
+
+el("style").atxt(`
+input{font-size: 1em}
+.tx{
+  grid-row: 2;
+  text-align: center;
+  font-family: monospace;
+  background-color: white;
+  white-space: pre;
+  grid-column: 2;
+  border-radius: 3px;
+  padding: 2px;
+}
+.ms, .tt{
+  font-size: 0.5em;
+  grid-column: 1/4;
+  text-align: center;
+}
+.ms {
+  grid-row: 4;
+}
+.tt {
+  grid-row: 5;
+}
+
+.mb {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.im{
+  border-radius: 3px;
+  width: 35px;
+  height: 45px;
+  margin: 5px;
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr max-content 1fr max-content max-content;
+  grid-template-columns: 1fr max-content 1fr;
+}
+.bg, .fg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: -1;
+}
+.bg{
+  background-color: green;
+}
+.fg{
+  background-color: red;
+  opacity: calc(var(--time) / var(--scale));
+  transition: 0.1s opacity;
+}
+
+`).adto(tmbel);
+
+let scale = 1;
+let allScales = [];
+let setScale = newScale => {
+body.style.setProperty("--scale", "" + newScale);
+scale = newScale;
+};
+
+let firstKey = 0;
+let lastKey = 0;
+
+document.onkeydown = e => {
+e.preventDefault();
+e.stopPropagation();
+
+let key = e.key;
+console.log(key);
+if(key === "Enter" || key === "Escape") {
+  setScale(1);
+  lastKey = 0;
+  body.innerHTML = "";
+  return;
+}
+if(key === "Backspace") {
+  allScales.pop();
+  if(allScales.length === 0) allScales.push([0, 1]);
+  let sscl = allScales[allScales.length - 1];
+  setScale(sscl[1]);
+  lastKey = sscl[0];
+  (body.children[body.children.length - 1] || ({remove(){}})) .remove();
+}
+if(key.length > 1) return;
+
+let rn = now();
+if(!lastKey) {firstKey = rn; lastKey = firstKey};
+let thisKey = rn - lastKey;
+lastKey = rn;
+let totalTime = ((rn - firstKey) / 1000).toLocaleString({minimumFractionDigits: 4, maximumFractionDigits: 4});
+
+if(thisKey > scale) setScale(thisKey);
+allScales.push([lastKey, scale]);
+
+let dispel = el("div").attr({class: "im"}).adto(body)
+.dwth(q => q.style.setProperty("--time", ""+thisKey));
+let bgel = el("div").attr({class: "bg"}).adto(dispel);
+let fgel = el("div").attr({class: "fg"}).adto(dispel);
+let txtl = el("div").attr({class: "tx"}).atxt(key).adto(dispel);
+let msel = el("div").attr({class: "ms"}).atxt(thisKey + "ms").adto(dispel);
+let ttel = el("div").attr({class: "tt"}).atxt(totalTime + "s").adto(dispel);
+
+};
+
+}
+
+
+</script>
+</body>
+</html>
