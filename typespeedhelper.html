@@ -111,6 +111,7 @@ let crsr;
 let acrsr = () => {
   crsr && crsr.remove();
   crsr = el("div").adto(body).attr({class: "cr"});
+  crsr.scrollIntoView();
 };
 let alynl = el("div").adto(tmbel).attr({class: "al"});
 let nlyn = () => {
