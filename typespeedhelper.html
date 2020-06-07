@@ -6,8 +6,6 @@
 <body>
 <div id="main"></div>
 <script>
-
-
 {
 
 let el = (nme) => document.createElement(nme);
@@ -23,10 +21,8 @@ let now = () => new Date().getTime();
 
 let tmbel = (document.getElementById("main") || document.body)
     .dwth(q => q.innerHTML = "")
-    .adch(el("p").atxt("type. press esc/enter to clear. press backspace to delete."))
+    .adch(el("p").atxt("type. enter to newline. escape to clear. backspace to backspace."))
     .adch(el("input").attr({placeholder: "type here on mobile"}));
-let body = el("div").adto(tmbel)
-    .attr({class: "mb"});
 
 el("style").atxt(`
 input{font-size: 1em}
@@ -52,6 +48,11 @@ input{font-size: 1em}
   grid-row: 5;
 }
 
+.cr{
+  width: 5px;
+  height: 55px;
+  background-color: black;
+}
 .mb {
   display: flex;
   flex-direction: row;
@@ -94,16 +95,41 @@ scale = newScale;
 let firstKey = 0;
 let lastKey = 0;
 
+el("button").adto(tmbel).atxt("clear").onclick = () => {
+  alynl.innerHTML = "";
+  nlyn();
+};
+
+let body;
+
+let crsr;
+let acrsr = () => {
+  crsr && crsr.remove();
+  crsr = el("div").adto(body).attr({class: "cr"});
+};
+let alynl = el("div").adto(tmbel).attr({class: "al"});
+let nlyn = () => {
+  body = el("div").adto(alynl).attr({class: "mb"});
+  acrsr();
+  setScale(1);
+  lastKey = 0;
+  allScales = [];
+};
+nlyn();
+
 document.onkeydown = e => {
 e.preventDefault();
 e.stopPropagation();
 
 let key = e.key;
 console.log(key);
-if(key === "Enter" || key === "Escape") {
-  setScale(1);
-  lastKey = 0;
-  body.innerHTML = "";
+if(key === "Enter") {
+  nlyn();
+  return;
+}
+if(key === "Escape") {
+  alynl.innerHTML = "";
+  nlyn();
   return;
 }
 if(key === "Backspace") {
@@ -112,7 +138,7 @@ if(key === "Backspace") {
   let sscl = allScales[allScales.length - 1];
   setScale(sscl[1]);
   lastKey = sscl[0];
-  (body.children[body.children.length - 1] || ({remove(){}})) .remove();
+  (body.children[body.children.length - 2] || ({remove(){}})) .remove();
 }
 if(key.length > 1) return;
 
@@ -132,11 +158,11 @@ let fgel = el("div").attr({class: "fg"}).adto(dispel);
 let txtl = el("div").attr({class: "tx"}).atxt(key).adto(dispel);
 let msel = el("div").attr({class: "ms"}).atxt(thisKey + "ms").adto(dispel);
 let ttel = el("div").attr({class: "tt"}).atxt(totalTime + "s").adto(dispel);
+acrsr();
 
 };
 
 }
-
 
 </script>
 </body>
