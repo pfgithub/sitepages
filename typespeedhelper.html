@@ -48,7 +48,6 @@ input{font-size: 1em}
 .tt {
   grid-row: 5;
 }
-
 .cr{
   width: 5px;
   height: 55px;
@@ -85,7 +84,6 @@ input{font-size: 1em}
   opacity: calc(var(--time) / var(--scale));
   transition: 0.1s opacity;
 }
-
 `).adto(tmbel);
 
 let scale = 1;
@@ -127,6 +125,9 @@ e.stopPropagation();
 let key = e.key;
 console.log(key);
 if(key === "Enter") {
+  let btnel = el("button").attr({class: "cl"}).atxt("clear").adto(body)
+  let ltdel = body;
+  btnel.onclick = () => ltdel.remove();
   nlyn();
   return;
 }
