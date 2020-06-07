@@ -169,8 +169,9 @@ let ttel = el("div").attr({class: "tt"}).atxt(totalTime + "s").adto(dispel);
 acrsr();
 
 };
+document.onkeyup = e => {e.stopPropagation(); e.preventDefault();}
 
-}
+};
 
 </script>
 </body>
