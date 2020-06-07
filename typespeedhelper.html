@@ -128,7 +128,7 @@ if(key === "Enter") {
   return;
 }
 if(key === "Escape") {
-  alynl.innerHTML = "";
+  (alynl.children[alynl.children.length - 1] || ({remove(){}})) .remove();
   nlyn();
   return;
 }
