@@ -1,0 +1,70 @@
+---
+title: Emoji🐸︎Lines
+layout: default
+---
+
+<p>
+guess the number between 1 and 438995624
+</p>
+<div id="maincontent" style="white-space: pre"></div>
+
+<script>
+
+window.el = (nme) => document.createElement(nme);
+window.txt = (txt) => document.createTextNode(txt);
+window.anychange = (itms, cb) => (itms.forEach(itm => itm.oninput = () => cb()), cb());
+window.body = document.getElementById("maincontent") || document.body;
+Node.prototype.attr = function(atrs) {Object.entries(atrs).forEach(([k, v]) => this.setAttribute(k, v)); return this;}
+Node.prototype.adto = function(prnt) {prnt.appendChild(this); return this;}
+Node.prototype.adch = function(chld) {this.appendChild(chld); return this;}
+Node.prototype.atxt = function(txta) {this.appendChild(txt(txta)); return this;}
+Node.prototype.onev = function(evnm, cb) {this.addEventListener(evnm, cb); return this;}
+Node.prototype.drmv = function(defer) {defer(() => this.remove()); return this;}
+Node.prototype.clss = function(clss) {clss.split(".").filter(q => q).map(itm => this.classList.add(itm)); return this;}
+Object.prototype.dwth = function(cb) {cb(this); return this;}
+Object.defineProperty(Array.prototype, "last", {get: function() {return this[this.length - 1]}})
+
+
+let centerOf = (a, b) => Math.floor((b - a) / 2 + a);
+let history = [{min: 1, max: 438995624, center: centerOf(1, 438995624)}];
+
+var texts = el("div").adto(body);
+var buttons = el("div").adto(body);
+
+texts.atxt("Min: ");
+var minEl = txt("").adto(texts);
+texts.atxt(", Max: ");
+var maxEl = txt("").adto(texts);
+texts.atxt(", Guess: ");
+var guessEl = el("input").adto(texts);
+var lowerEl = el( "button").adto(buttons).atxt("lower");
+var higherEl = el("button").adto(buttons).atxt("higher");
+var undoEl = el(  "button").adto(buttons).atxt("undo");
+
+lowerEl.onev("click", e => {
+  let {min, center} = history.last;
+  history.push({min, max: center, center: centerOf(min, center)});
+  update();
+  guessEl.select();
+});
+higherEl.onev("click", e => {
+  let {max, center} = history.last;
+  history.push({min: center, max, center: centerOf(center, max)});
+  update();
+  guessEl.select();
+});
+undoEl.onev("click", e => {
+  if(history.length > 1) history.pop();
+  update();
+});
+
+function update(){
+  let {min, max, center} = history.last;
+  minEl.nodeValue = "" + min;
+  maxEl.nodeValue = "" + max;
+  guessEl.value = "mb!guess " + center;
+  undoEl.disabled = history.length <= 1;
+}
+update();
+
+</script>
