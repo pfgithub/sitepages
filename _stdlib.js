@@ -11,3 +11,10 @@ Node.prototype.drmv = function(defer) {defer(() => this.remove()); return this;}
 Node.prototype.clss = function(clss) {clss.split(".").filter(q => q).map(itm => this.classList.add(itm)); return this;};
 Object.prototype.dwth = function(cb) {cb(this); return this;};
 Object.defineProperty(Array.prototype, "last", {get: function() {return this[this.length - 1]}});
+
+window.makeDefer = () => {
+	let list = [];
+	let res = cb => {list.unshift(cb)};
+	res.cleanup = () => {list.forEach(cb => cb())};
+	return res;
+};
