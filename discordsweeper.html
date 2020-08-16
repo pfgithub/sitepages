@@ -114,7 +114,7 @@ layout: default
   let getChoices = () => {
     let choices;
     try {
-      choices = localStorage.getItem("choices");
+      choices = JSON.parse(localStorage.getItem("choices"));
     } catch (e) {
       console.log(e);
     }
