@@ -6,207 +6,356 @@ layout: default
 <div id="maincontent"></div>
 
 <script>
-  {
-window.el = (nme) => document.createElement(nme);
-window.txt = (txt) => document.createTextNode(txt);
-window.anychange = (itms, cb) => (itms.forEach(itm => itm.oninput = () => cb()), cb());
-window.body = document.getElementById("maincontent") || document.body;
-Node.prototype.attr = function(atrs) {Object.entries(atrs).forEach(([k, v]) => v === undefined ? this.removeAttribute(k) : this.setAttribute(k, v)); return this;};
-Node.prototype.adto = function(prnt) {prnt.appendChild(this); return this;};
-Node.prototype.adch = function(chld) {this.appendChild(chld); return this;};
-Node.prototype.atxt = function(txta) {this.appendChild(txt(txta)); return this;};
-Node.prototype.onev = function(evnm, cb) {this.addEventListener(evnm, cb); return this;};
-Node.prototype.drmv = function(defer) {defer(() => this.remove()); return this;};
-Node.prototype.clss = function(clss) {clss.split(".").filter(q => q).map(itm => this.classList.add(itm)); return this;};
-Object.prototype.dwth = function(cb) {cb(this); return this;};
-if(!("last" in Array.prototype)) Object.defineProperty(Array.prototype, "last", {get: function() {return this[this.length - 1]}});
+{
+  window.el = (nme) => document.createElement(nme);
+  window.txt = (txt) => document.createTextNode(txt);
+  window.anychange = (itms, cb) => (
+    itms.forEach((itm) => (itm.oninput = () => cb())), cb()
+  );
+  window.body = document.getElementById("maincontent") || document.body;
+  Node.prototype.attr = function (atrs) {
+    Object.entries(atrs).forEach(([k, v]) =>
+      v === undefined ? this.removeAttribute(k) : this.setAttribute(k, v)
+    );
+    return this;
+  };
+  Node.prototype.adto = function (prnt) {
+    prnt.appendChild(this);
+    return this;
+  };
+  Node.prototype.adch = function (chld) {
+    this.appendChild(chld);
+    return this;
+  };
+  Node.prototype.atxt = function (txta) {
+    this.appendChild(txt(txta));
+    return this;
+  };
+  Node.prototype.onev = function (evnm, cb) {
+    this.addEventListener(evnm, cb);
+    return this;
+  };
+  Node.prototype.drmv = function (defer) {
+    defer(() => this.remove());
+    return this;
+  };
+  Node.prototype.clss = function (clss) {
+    clss
+      .split(".")
+      .filter((q) => q)
+      .map((itm) => this.classList.add(itm));
+    return this;
+  };
+  Object.prototype.dwth = function (cb) {
+    cb(this);
+    return this;
+  };
+  if (!("last" in Array.prototype))
+    Object.defineProperty(Array.prototype, "last", {
+      get: function () {
+        return this[this.length - 1];
+      },
+    });
 
-window.makeDefer = () => {
-	let list = [];
-	let res = cb => {list.unshift(cb)};
-	res.cleanup = () => {list.forEach(cb => cb())};
-	return res;
-};
+  window.makeDefer = () => {
+    let list = [];
+    let res = (cb) => {
+      list.unshift(cb);
+    };
+    res.cleanup = () => {
+      list.forEach((cb) => cb());
+    };
+    return res;
+  };
 
-
-/// w: number
-/// h: number
-/// startchar: string
-/// -> string
-let gen = (w, h) => {
-  let arr = [];
-  for(let y = 0; y < h; y++){
-    arr[y] = [];
-    for(let x = 0; x < w; x++){
-      arr[y][x] = Math.random();
+  /// w: number
+  /// h: number
+  /// startchar: string
+  /// -> string
+  let gen = (w, h) => {
+    let arr = [];
+    for (let y = 0; y < h; y++) {
+      arr[y] = [];
+      for (let x = 0; x < w; x++) {
+        arr[y][x] = Math.random();
+      }
     }
-  }
-	return arr;
-};
-/// result: result of gen();
-/// mode: data[]
-/// b: number%
-/// startchar: string
-let genFinal = (datamap, mode, bombs, startchar = ".") => {
-	let arr = datamap.map(v => v.map(q => q <= bombs ? 9 : 0));
-  const h = arr.length;
-  for(let y = 0; y < h; y++){
-		const w = arr[y].length;
-    for(let x = 0; x < w; x++){
-      let vta = arr[y][x] >= 9 ? 1 : 0;
+    return arr;
+  };
+  /// result: result of gen();
+  /// mode: data[]
+  /// b: number%
+  /// startchar: string
+  let genFinal = (datamap, mode, bombs, startchar = ".") => {
+    let arr = datamap.map((v) => v.map((q) => (q <= bombs ? 9 : 0)));
+    const h = arr.length;
+    for (let y = 0; y < h; y++) {
+      const w = arr[y].length;
+      for (let x = 0; x < w; x++) {
+        let vta = arr[y][x] >= 9 ? 1 : 0;
 
-      for(let t = Math.max(y-1,0); t <= Math.min(y+1,h-1); t++){
-        for(let s = Math.max(x-1,0); s <= Math.min(x+1,w-1); s++){
-          arr[t][s] += vta;
+        for (let t = Math.max(y - 1, 0); t <= Math.min(y + 1, h - 1); t++) {
+          for (let s = Math.max(x - 1, 0); s <= Math.min(x + 1, w - 1); s++) {
+            arr[t][s] += vta;
+          }
         }
       }
     }
-  }
 
+    let vals = mode;
+    return (
+      (startchar ? startchar + "\n" : "") +
+      arr.map(
+        (el) => "||" + el.map((e) => vals[Math.min(e, 9)]).join`||||` + "||"
+      ).join`\n`
+    );
+  };
 
-	let vals = mode;
-  return (startchar?startchar+"\n":"")+arr.map(el=>"||"+el.map(e=>vals[Math.min(e,9)] ).join`||||`+"||").join`\n`;
-};
+  let getChoices = () => {
+    let choices;
+    try {
+      choices = localStorage.getItem("choices");
+    } catch (e) {
+      console.log(e);
+    }
+    if (choices) return choices;
+    return {
+      emoji: ["⬜", "1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "💥"],
+      numbers: [
+        " ` ` ",
+        " `1` ",
+        " `2` ",
+        " `3` ",
+        " `4` ",
+        " `5` ",
+        " `6` ",
+        " `7` ",
+        " `8` ",
+        " `X` ",
+      ],
+      wide: ["　", "１", "２", "３", "４", "５", "６", "７", "８", "Ｘ"],
+      plain: [
+        "` `",
+        "`1`",
+        "`2`",
+        "`3`",
+        "`4`",
+        "`5`",
+        "`6`",
+        "`7`",
+        "`8`",
+        "`X`",
+      ],
+    };
+  };
+  let CUSTOM_CHOICE = "CHOICE__CHOICE__CUSTOM__IS__CHOICE______";
 
-let getChoices = () => {
-   let choices;
-   try {choices = localStorage.getItem("choices")}catch(e){console.log(e);}
-   if(choices) return choices;
-   return {
-       emoji: ["⬜", "1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "💥"],
-       numbers: [" ` ` ", " `1` ", " `2` ", " `3` ", " `4` ", " `5` ", " `6` ", " `7` ", " `8` ", " `X` "],
-       wide: ["　", "１", "２", "３", "４", "５", "６", "７", "８", "Ｘ"],
-       plain: ["` `", "`1`", "`2`", "`3`", "`4`", "`5`", "`6`", "`7`", "`8`", "`X`"],
-   };
-};
-let CUSTOM_CHOICE = "CHOICE__CHOICE__CUSTOM__IS__CHOICE______";
+  let css = (q) => q[0];
 
-let css = q => q[0];
+  if (window.styleelem) window.styleelem.remove();
+  window.styleelem = el("style").adto(document.head).atxt(css`
+    .red {
+      color: red;
+    }
+    textarea {
+      width: 100%;
+    }
+    input {
+      width: 75px;
+    }
+  `);
+  body.innerHTML = "";
 
-if(window.styleelem) window.styleelem.remove();
-window.styleelem = el("style").adto(document.head).atxt(css`
-.red {
-	color: red;
-}
-textarea {
-	width: 100%;
-}
-input {
-	width: 75px;
-}
-`);
-body.innerHTML = "";
-
-let data = {
+  let data = {
     allChoices: getChoices(),
     editingChoice: undefined,
     selected: "emoji",
-    map: {w: -1, h: -1, data: undefined},
-};
-let prevData = {allChoices: Symbol(), selected: Symbol(), map: {w: Symbol(), h: Symbol(), data: Symbol()}};
+    map: { w: -1, h: -1, data: undefined },
+  };
+  let prevData = {
+    allChoices: Symbol(),
+    selected: Symbol(),
+    map: { w: Symbol(), h: Symbol(), data: Symbol() },
+  };
 
-let update = () => {
-	if(data.selected !== prevData.selected) {
-		if(!data.editingChoice) {
-			prevData.selected = data.selected;
+  let update = () => {
+    if (data.selected !== prevData.selected) {
+      if (!data.editingChoice) {
+        prevData.selected = data.selected;
+      }
+      fillChoices();
     }
-		fillChoices();
+    select.disabled = !!data.editingChoice;
+    savebtn.disabled = !data.editingChoice;
+    saveasbtn.disabled = !data.editingChoice;
+    deletebtn.textContent = data.editingChoice ? "Discard Edits" : "Delete";
+    data.map.w = +sizew.value || 1;
+    if (data.map.w < 1) data.map.w = 1;
+    data.map.h = +sizeh.value || 1;
+    if (data.map.h < 1) data.map.h = 1;
+
+    if (
+      data.map.w !== prevData.map.w ||
+      data.map.h !== prevData.map.h ||
+      !data.map.data
+    ) {
+      prevData.map.w = data.map.w;
+      prevData.map.h = data.map.h;
+      data.map.data = gen(data.map.w, data.map.h);
+    }
+    const mode = data.editingChoice
+      ? customchars.map((cc) => cc.value)
+      : data.allChoices[data.selected];
+    if (!data.editingChoice)
+      customchars.forEach((cc, i) => (cc.value = mode[i]));
+    const bombs = +sizeb.value || 1;
+    const startchar = startcharpicker.value || "";
+    restextarea.value = genFinal(data.map.data, mode, bombs / 100, startchar);
+    charcount.nodeValue = "" + restextarea.value.length;
+    restextarea.rows = restextarea.value.split("\n").length + 4;
+  };
+
+  let mainstats = el("div").adto(body);
+  let sizew = el("input")
+    .attr({ type: "number", placeholder: "w" })
+    .dwth((q) => (q.value = 13))
+    .adto(mainstats.atxt("w:"))
+    .onev("input", update);
+  let sizeh = el("input")
+    .attr({ type: "number", placeholder: "h" })
+    .dwth((q) => (q.value = 15))
+    .adto(mainstats.atxt(", h:"))
+    .onev("input", update);
+  let sizeb = el("input")
+    .attr({ type: "number", placeholder: "b" })
+    .dwth((q) => (q.value = 15))
+    .adto(mainstats.atxt(", bombs:"))
+    .onev("input", update);
+  mainstats.atxt("%");
+
+  let presetbar = el("div").adto(body).atxt("Preset: ");
+  let select = el("select")
+    .adto(presetbar)
+    .onev("change", (e) => {
+      data.selected = select.value;
+      prevData.selected = select.value;
+      update();
+    });
+
+  function dosaveallchoices() {
+    try {
+      localStorage.setItem("choices", JSON.stringify(data.allChoices));
+    } catch (e) {
+      alert("oh no can't localstorage");
+    }
+    fillChoices();
   }
-  select.disabled = !!data.editingChoice;
-  savebtn.disabled = !data.editingChoice;
-  saveasbtn.disabled = !data.editingChoice;
-  deletebtn.textContent = data.editingChoice ? "Discard Edits" : "Delete";
-  data.map.w = +sizew.value || 1;
-  if(data.map.w < 1) data.map.w = 1;
-  data.map.h = +sizeh.value || 1;
-  if(data.map.h < 1) data.map.h = 1;
 
-  if(data.map.w !== prevData.map.w || data.map.h !== prevData.map.h || !data.map.data) {
-    prevData.map.w = data.map.w;
-    prevData.map.h = data.map.h;
-    data.map.data = gen(data.map.w, data.map.h);
+  function savechoice(choicename) {
+    data.allChoices[choicename] = customchars.map((cc) => cc.value);
+    data.editingChoice = undefined;
+    data.selected = choicename;
+    dosaveallchoices();
   }
-  const mode = data.editingChoice ? customchars.map(cc => cc.value) : data.allChoices[data.selected];
-  if(!data.editingChoice) customchars.forEach((cc, i) => cc.value = mode[i]);
-  const bombs = +sizeb.value || 1;
-  const startchar = startcharpicker.value || "";
-  restextarea.value = genFinal(data.map.data, mode, bombs / 100, startchar);
-  charcount.nodeValue = "" + restextarea.value.length;
-  restextarea.rows = restextarea.value.split("\n").length + 4;
-};
 
-let mainstats = el("div").adto(body);
-let sizew = el("input").attr({type: "number", placeholder: "w"}).dwth(q => q.value = 13).adto(mainstats.atxt("w:")).onev("input", update);
-let sizeh = el("input").attr({type: "number", placeholder: "h"}).dwth(q => q.value = 15).adto(mainstats.atxt(", h:")).onev("input", update);
-let sizeb = el("input").attr({type: "number", placeholder: "b"}).dwth(q => q.value = 15).adto(mainstats.atxt(", bombs:")).onev("input", update);
-mainstats.atxt("%");
+  let savebtn = el("button")
+    .adto(presetbar)
+    .atxt("Save")
+    .onev("click", () => {
+      if (!data.editingChoice) return;
+      savechoice(data.editingChoice);
+      update();
+    });
+  let saveasbtn = el("button")
+    .adto(presetbar)
+    .atxt("Save As…")
+    .onev("click", () => {
+      if (!data.editingChoice) return;
+      let name = prompt("Save name", data.editingChoice);
+      if (!name) return;
+      if (data.allChoices[name])
+        return alert("Name `" + name + "` is already taken.");
+      savechoice(name);
+      update();
+    });
+  let deletebtn = el("button")
+    .adto(presetbar)
+    .atxt("Delete")
+    .clss("red")
+    .onev("click", () => {
+      if (data.editingChoice) {
+        data.selected = Object.keys(data.allChoices)[0];
+        if (!data.selected) alert("no");
+        data.editingChoice = undefined;
+        fillChoices();
+        update();
+        return;
+      }
+      if (
+        !confirm(
+          'Are you sure you want to delete "' +
+            (data.editingChoice || data.selected) +
+            '"? OK = delete, Cancel = nvm'
+        )
+      )
+        return;
+      delete data.allChoices[data.selected];
+      data.selected = Object.keys(data.allChoices)[0];
+      if (!data.selected) alert("no");
+      dosaveallchoices();
+      update();
+    });
 
-let presetbar = el("div").adto(body).atxt("Preset: ");
-let select = el("select").adto(presetbar)
-	.onev("change", e => {data.selected = select.value; prevData.selected = select.value; update();});
-
-function dosaveallchoices() {
-try{
-	localStorage.setItem("choices", JSON.stringify(data.allChoices));
-}catch(e) {
-	alert("oh no can't localstorage");
-}
-fillChoices();
-}
-
-function savechoice(choicename) {
-	data.allChoices[choicename] = customchars.map(cc => cc.value);
-data.editingChoice = undefined;
-data.selected = choicename;
-dosaveallchoices();
-}
-
-let savebtn = el("button").adto(presetbar).atxt("Save").onev("click", () => {
-	if(!data.editingChoice) return;
-	savechoice(data.editingChoice);
-	update();
-});
-let saveasbtn = el("button").adto(presetbar).atxt("Save As…").onev("click", () => {
-	if(!data.editingChoice) return;
-	let name = prompt("Save name", data.editingChoice);
-	if(!name) return;
-	if(data.allChoices[name]) return alert("Name `"+name+"` is already taken.");
-	savechoice(name);
-	update();
-});
-let deletebtn = el("button").adto(presetbar).atxt("Delete").clss("red").onev("click", () => {
-	if(data.editingChoice) {data.selected = Object.keys(data.allChoices)[0]; if(!data.selected) alert("no"); data.editingChoice = undefined; fillChoices(); update(); return;}
-	if(!confirm("Are you sure you want to delete \""+(data.editingChoice || data.selected)+"\"? OK = delete, Cancel = nvm")) return;
-	delete data.allChoices[data.selected];
-	data.selected = Object.keys(data.allChoices)[0]; if(!data.selected) alert("no");
-dosaveallchoices();
-update();
-});
-
-let fillChoices = () => {
+  let fillChoices = () => {
     select.innerHTML = "";
-    for(let name of Object.keys(data.allChoices).sort()) {
-        el("option").dwth(v => v.value = name).atxt(name).adto(select).attr({selected: data.selected === name && !data.editingChoice ? "" : undefined});
+    for (let name of Object.keys(data.allChoices).sort()) {
+      el("option")
+        .dwth((v) => (v.value = name))
+        .atxt(name)
+        .adto(select)
+        .attr({
+          selected:
+            data.selected === name && !data.editingChoice ? "" : undefined,
+        });
     }
-    if(data.editingChoice) el("option").dwth(v => v.value = CUSTOM_CHOICE).atxt(data.editingChoice + "*").attr({selected: true}).adto(select);
-};
+    if (data.editingChoice)
+      el("option")
+        .dwth((v) => (v.value = CUSTOM_CHOICE))
+        .atxt(data.editingChoice + "*")
+        .attr({ selected: true })
+        .adto(select);
+  };
 
-let ccharsbar = el("div").adto(body);
-let customchars = new Array(10).fill(0).map((itm, i) => {
-	return el("input").attr({placeholder: ""+i}).adto(ccharsbar).onev("input", e => {
-    if(!data.editingChoice) {data.editingChoice = data.selected; data.selected = CUSTOM_CHOICE;} update();
+  let ccharsbar = el("div").adto(body);
+  let customchars = new Array(10).fill(0).map((itm, i) => {
+    return el("input")
+      .attr({ placeholder: "" + i })
+      .adto(ccharsbar)
+      .onev("input", (e) => {
+        if (!data.editingChoice) {
+          data.editingChoice = data.selected;
+          data.selected = CUSTOM_CHOICE;
+        }
+        update();
+      });
   });
-});
 
-let startcharpicker = el("input").attr({type: "text", placeholder: "."}).dwth(q => q.value = ".").adto(el("div").adto(body)).onev("input", update);
+  let startcharpicker = el("input")
+    .attr({ type: "text", placeholder: "." })
+    .dwth((q) => (q.value = "."))
+    .adto(el("div").adto(body))
+    .onev("input", update);
 
-el("button").adto(el("div").adto(body)).atxt("Generate!").onev("click", () => {data.map.data = undefined; update()});
-let charcount = txt("").adto(el("div").adto(body).atxt("Character count: "));
-let restextarea = el("textarea").adto(el("div").adto(body));
+  el("button")
+    .adto(el("div").adto(body))
+    .atxt("Generate!")
+    .onev("click", () => {
+      data.map.data = undefined;
+      update();
+    });
+  let charcount = txt("").adto(el("div").adto(body).atxt("Character count: "));
+  let restextarea = el("textarea").adto(el("div").adto(body));
 
-update();
-
-
-
+  update();
 }
 </script>
