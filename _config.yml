@@ -1,5 +1,9 @@
 remote_theme: pfgithub/cayman
+google_analytics: UA-175640008-1
 custom_buttons:
+  -
+    title: pfg.pw
+    url: https://pfg.pw
   -
     title: View on Github
     url: https://github.com/pfgithub/sitepages
