@@ -126,9 +126,7 @@ const {html, svg} = uhtml;
 //   | {status: "uploaded", link: string}
 // ) & {editing?: string}
 
-const mock = "?content=%3C%40341076015663153153%3E%2C%20%3C%3Asuccess%3A508840840416854026%3E%20Bot%20restarted%20in%204%20seconds%2C%20042ms.&msglink=https%3A%2F%2Fdiscordapp.com%2Fchannels%2F407693624374067201%2F413910491484913675%2F745383069367795864";
-
-const urlParams = new URLSearchParams(mock);
+const urlParams = new URLSearchParams(location.search);
 const editbase = urlParams.get("content");
 const editmsglink = urlParams.get("msglink");
 
@@ -140,6 +138,7 @@ function oninput(e) {
 }
 
 const render = () => html`
+    Characters: ${data.text.length}/2000
     <div><textarea disabled=${{uploading: true}[data.status] ? "" : undefined} oninput=${oninput}>${data.text}</textarea></div>
     <div><button disabled=${{uploading: true}[data.status] ? "" : undefined} onclick=${() => submit()}>
         ${{
