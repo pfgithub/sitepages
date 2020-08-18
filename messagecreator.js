@@ -140,7 +140,7 @@ function oninput(e) {
 
 const render = () => html`
     Characters: ${data.text.length}/2000
-    <div><textarea disabled=${{uploading: true}[data.status] ? "" : undefined} rows=${data.text.split("\n".length + 4)} style="width:100%;" oninput=${oninput}>${data.text}</textarea></div>
+    <div><textarea disabled=${{uploading: true}[data.status] ? "" : undefined} rows=${data.text.split("\n").length + 4} style="width:100%;" oninput=${oninput}>${data.text}</textarea></div>
     <div><button disabled=${{uploading: true}[data.status] ? "" : undefined} onclick=${() => submit()}>
         ${{
             none: () => data.editing ? "Edit" : "Send",
