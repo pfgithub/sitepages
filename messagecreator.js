@@ -170,9 +170,10 @@ function submit() {
         .then(res => {
             // res: {success: boolean, key: string, link: string, expiry: string}
             console.log(res);
-            if(res.error) {
+            if(res.success === false) {
                 data.status = "error";
                 data.errmsg = "Error "+data.error+": "+data.message;
+                data.edited = false;
                 return;
             }
             data.status = "uploaded";
