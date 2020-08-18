@@ -164,6 +164,9 @@ layout: default
     input {
       width: 75px;
     }
+    button:disabled {
+      display: none;
+    }
   `);
   body.innerHTML = "";
 
@@ -189,7 +192,7 @@ layout: default
     select.disabled = !!data.editingChoice;
     savebtn.disabled = !data.editingChoice;
     saveasbtn.disabled = !data.editingChoice;
-    deletebtn.textContent = data.editingChoice ? "Discard Edits" : "Delete";
+    deletebtn.textContent = data.editingChoice ? "Discard Edits" : "Delete Preset";
     data.map.w = +sizew.value || 1;
     if (data.map.w < 1) data.map.w = 1;
     data.map.h = +sizeh.value || 1;
