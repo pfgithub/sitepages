@@ -174,6 +174,7 @@ function submit() {
                 data.status = "error";
                 data.errmsg = "Error "+data.error+": "+data.message;
                 data.edited = false;
+                update();
                 return;
             }
             data.status = "uploaded";
