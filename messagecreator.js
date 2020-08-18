@@ -172,7 +172,7 @@ function submit() {
             console.log(res);
             if(res.success === false) {
                 data.status = "error";
-                data.errmsg = "Error "+data.error+": "+data.message;
+                data.errmsg = "Error "+res.error+": "+res.message;
                 data.edited = false;
                 update();
                 return;
