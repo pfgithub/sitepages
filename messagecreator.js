@@ -1,4 +1,3 @@
-{
 window.el = (nme) => document.createElement(nme);
 window.txt = (txt) => document.createTextNode(txt);
 window.anychange = (itms, cb) => (
@@ -124,7 +123,7 @@ let data = {status: "none", text: ""};
 
 function oninput(e) {
     data.text = e.currentTarget.value;
-    if(data.status === "error") data.edited = true;
+    if(data.status === "error") {data.edited = true; update();}
 }
 
 const render = () => html`
@@ -187,10 +186,3 @@ function submit() {
 }
 
 update();
-
-
-
-
-
-
-}
