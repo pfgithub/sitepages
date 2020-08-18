@@ -152,11 +152,18 @@ function submit() {
     const toupload = JSON.stringify({text: data.text});
     data.status = "uploading";
     update();
-    const formdata = new FormData();
-    formdata.append("file", new Blob([toupload], {type: "application/json"}, "message.json"));
-    fetch("https://file.io", {
+    fetch("https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyAp1bFmhU7jx2tdcDzXz1cJu_9kyQgB5QQ", {
         method: "POST",
-        body: formdata,
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            dynamicLinkInfo: {
+                domainUriPrefix: "s.pfg.pw",
+                link: "https://pfg.pw/spoilerbot/spoiler?s="+encodeURIComponent(toupload),
+            },
+            suffix: {option: "SHORT"},
+        }),
     })
         .then(response => response.json())
         .catch(e => {
@@ -169,15 +176,17 @@ function submit() {
         .then(res => {
             // res: {success: boolean, key: string, link: string, expiry: string}
             console.log(res);
-            if(res.success === false) {
+            if(!res.shortLink) {
                 data.status = "error";
-                data.errmsg = "Error "+res.error+": "+res.message;
+                data.errmsg = "Error "+JSON.stringify(res);
                 data.edited = false;
                 update();
                 return;
             }
+            if(res.success === false) {
+            }
             data.status = "uploaded";
-            data.link = res.key;
+            data.link = res.shortLink.replace("https://s.pfg.pw/", "");
             update();
         })
         .catch(e => {
