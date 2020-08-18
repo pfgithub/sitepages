@@ -134,7 +134,8 @@ let data = {status: "none", text: editbase || "", editing: editmsglink || undefi
 
 function oninput(e) {
     data.text = e.currentTarget.value;
-    if(data.status === "error") {data.edited = true; update();}
+    if(data.status === "error") {data.edited = true;}
+    update();
 }
 
 const render = () => html`
