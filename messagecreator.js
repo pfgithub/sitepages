@@ -119,7 +119,20 @@ n instanceof R?H(r,n):n;return a!==r.wire&&(r.wire=a,e.textContent="",e.appendCh
 
 const {html, svg} = uhtml;
 
-let data = {status: "none", text: ""};
+// type Data = {text: string} & (
+//   | {status: "none"}
+//   | {status: "uploading"}
+//   | {status: "error", errmsg: string}
+//   | {status: "uploaded", link: string}
+// ) & {editing?: string}
+
+const mock = "?content=%3C%40341076015663153153%3E%2C%20%3C%3Asuccess%3A508840840416854026%3E%20Bot%20restarted%20in%204%20seconds%2C%20042ms.&msglink=https%3A%2F%2Fdiscordapp.com%2Fchannels%2F407693624374067201%2F413910491484913675%2F745383069367795864";
+
+const urlParams = new URLSearchParams(mock);
+const editbase = urlParams.get("content");
+const editmsglink = urlParams.get("msglink");
+
+let data = {status: "none", text: editbase || "", editing: editmsglink || undefined};
 
 function oninput(e) {
     data.text = e.currentTarget.value;
@@ -127,20 +140,22 @@ function oninput(e) {
 }
 
 const render = () => html`
-    <div><textarea disabled=${data.status === "uploading" ? "" : undefined} oninput=${oninput} value=${data.text}></textarea></div>
-    <div><button disabled=${data.status === "uploading" ? "" : undefined} onclick=${() => submit()}>
+    <div><textarea disabled=${{uploading: true}[data.status] ? "" : undefined} oninput=${oninput}>${data.text}</textarea></div>
+    <div><button disabled=${{uploading: true}[data.status] ? "" : undefined} onclick=${() => submit()}>
         ${{
-            none: () => "Submit",
+            none: () => data.editing ? "Edit" : "Send",
             uploading: () => "Uploading...",
-            error: () => data.edited ? "Submit" : "Retry",
-            uploaded: () => "Submit",
+            error: () => data.edited ? (data.editing ? "Edit" : "Send") : "Retry",
+            uploaded: () => data.editing ? "Edit" : "Send",
         }[data.status]()}
     </button></div>
     ${{
         none: () => "",
         uploading: () => "",
         error: () => html`<span style="err">${data.errmsg}</span>`,
-        uploaded: () => html`<code>ip!sendmsg c${data.link}R</code>`,
+        uploaded: () => data.editing
+            ? html`<code>ip!updatemsg ${data.editing} M${data.link}y</code>`
+            : html`<code>ip!sendmsg c${data.link}R</code>`,
     }[data.status]()}
 `;
 
