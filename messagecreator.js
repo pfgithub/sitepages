@@ -148,50 +148,51 @@ function update() {
     uhtml.render(body, render());
 }
 
-function submit() {
-    const toupload = JSON.stringify({text: data.text});
+// text: {text: string}
+// : Promise<{error: string} | {code: string}>
+function postText(text) {
+    return new Promise((resolve, reject) => {
+        fetch("https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyAp1bFmhU7jx2tdcDzXz1cJu_9kyQgB5QQ", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                dynamicLinkInfo: {
+                    domainUriPrefix: "s.pfg.pw",
+                    link: "https://pfg.pw/spoilerbot/spoiler?s="+encodeURIComponent(JSON.stringify(text)),
+                },
+                suffix: {option: "SHORT"},
+            }),
+        })
+            .then(response => response.json())
+            .catch(e => {
+                return resolve({error: " "+e.toString()});
+            })
+            .then(res => {
+                console.log(res);
+                if(!res.shortLink) {
+                    return resolve({error: "Error ```json\n"+JSON.stringify(res)+"\n```"})
+                }
+                return resolve({code: res.shortLink.replace("https://s.pfg.pw/", "")})
+            })
+            .catch(e => reject(e))
+    })
+}
+
+async function submit() {
     data.status = "uploading";
     update();
-    fetch("https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyAp1bFmhU7jx2tdcDzXz1cJu_9kyQgB5QQ", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            dynamicLinkInfo: {
-                domainUriPrefix: "s.pfg.pw",
-                link: "https://pfg.pw/spoilerbot/spoiler?s="+encodeURIComponent(toupload),
-            },
-            suffix: {option: "SHORT"},
-        }),
-    })
-        .then(response => response.json())
-        .catch(e => {
-            console.log(e);
-            data.status = "error";
-            data.errmsg = e.toString();
-            data.edited = false;
-            update();
-        })
-        .then(res => {
-            // res: {success: boolean, key: string, link: string, expiry: string}
-            console.log(res);
-            if(!res.shortLink) {
-                data.status = "error";
-                data.errmsg = "Error "+JSON.stringify(res);
-                data.edited = false;
-                update();
-                return;
-            }
-            if(res.success === false) {
-            }
-            data.status = "uploaded";
-            data.link = res.shortLink.replace("https://s.pfg.pw/", "");
-            update();
-        })
-        .catch(e => {
-            throw e;
-        });
+    const postresult = await postText({text: data.text});
+    if(postresult.error) {
+        data.status = "error";
+        data.errmsg = postresult.error;
+        data.edited = false;
+        return update();
+    }
+    data.status = "uploaded";
+    data.link = postresult.code;
+    return update();
 }
 
 update();
