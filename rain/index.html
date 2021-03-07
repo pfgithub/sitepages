@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rain</title>
+    <style>
+        html {
+            background-color: #181a1b;
+        }
+        .center {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .frame {
+            width: 500px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+        .absolute {
+            position: absolute;
+        }
+        .phase-0 {top: 0; left: 0}
+        .phase-1 {top: -500px; left: 0}
+        .speed-50 {--animation-phase: 0.5s}
+        .speed-60 {--animation-phase: 0.4s}
+        .speed-100 {--animation-phase: 0.25s}
+        .blur-100 {filter: blur(0.5px)}
+        .blur-200 {filter: blur(1px)}
+        .down {animation: down var(--animation-phase) linear infinite; }
+        @keyframes down {
+            from {transform: translateY(0)}
+            to {transform: translateY(100%)}
+        }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <div class="frame">
+            <img class="absolute phase-0" src="assets/bg.png" width="500px" height="500px" />
+            <div class="absolute phase-0"><div style="position: relative; overflow: hidden; height: 400px; width: 500px;">
+                <img class="absolute blur-100 phase-0 down speed-50" src="assets/rainl2.png" width="500px" height="500px" />
+                <img class="absolute blur-100 phase-1 down speed-50" src="assets/rainl2.png" width="500px" height="500px" />
+            </div></div>
+            <div class="absolute phase-0" style="top: 25px"><div style="position: relative; overflow: hidden; height: 400px; width: 500px;">
+                <img class="absolute blur-100 phase-0 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
+                <img class="absolute blur-100 phase-1 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
+            </div></div>
+            <img class="absolute blur-100 phase-0 down speed-100" src="assets/rain.png" width="500px" height="500px" />
+            <img class="absolute blur-100 phase-1 down speed-100" src="assets/rain.png" width="500px" height="500px" />
+            <img class="absolute phase-0" src="assets/overlay.png" width="500px" height="500px" />
+        </div>
+    </div>
+</body>
+</html>
