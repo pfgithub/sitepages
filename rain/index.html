@@ -23,9 +23,12 @@
         }
         .phase-0 {top: 0; left: 0}
         .phase-1 {top: -500px; left: 0}
+        .speed-10 {--animation-phase: 2s}
+        .speed-20 {--animation-phase: 1s}
         .speed-50 {--animation-phase: 0.5s}
         .speed-60 {--animation-phase: 0.4s}
         .speed-100 {--animation-phase: 0.25s}
+        .blur-50 {filter: blur(0.25px)}
         .blur-100 {filter: blur(0.5px)}
         .blur-200 {filter: blur(1px)}
         .down {animation: down var(--animation-phase) linear infinite; }
@@ -33,19 +36,49 @@
             from {transform: translateY(0)}
             to {transform: translateY(100%)}
         }
+        .rainl2-2x {
+            background-image: url(assets/rainl2.png);
+            width: 500px;
+            height: 500px;
+            background-size: 50%;
+        }
+        .rainl2-4x {
+            background-image: url(assets/rainl2.png);
+            width: 500px;
+            height: 500px;
+            background-size: 25%;
+        }
     </style>
+    <meta name="darkreader" content="ce5418feadf94199b641b9c55c8d422f">
+    <script>
+        let drtime = 100;
+        const rmdarkreader = () => {
+            document.head.querySelector(".darkreader")?.remove();
+            drtime *= 2;
+            setTimeout(() => rmdarkreader(), drtime);
+        };
+        setTimeout(() => rmdarkreader(), 0);
+    </script>
 </head>
 <body>
     <div class="center">
         <div class="frame">
             <img class="absolute phase-0" src="assets/bg.png" width="500px" height="500px" />
+            <div class="absolute phase-0"><div style="position: relative; overflow: hidden; height: 300px; width: 500px;">
+                <div class="absolute phase-0 down speed-10 rainl2-4x"></div>
+                <div class="absolute phase-1 down speed-10 rainl2-4x"></div>
+            </div></div>
+            <div class="absolute phase-0"><div style="position: relative; overflow: hidden; height: 350px; width: 500px;">
+                <div class="absolute phase-0 down speed-20 rainl2-2x"></div>
+                <div class="absolute phase-1 down speed-20 rainl2-2x"></div>
+            </div></div>
             <div class="absolute phase-0"><div style="position: relative; overflow: hidden; height: 400px; width: 500px;">
                 <img class="absolute blur-100 phase-0 down speed-50" src="assets/rainl2.png" width="500px" height="500px" />
                 <img class="absolute blur-100 phase-1 down speed-50" src="assets/rainl2.png" width="500px" height="500px" />
             </div></div>
             <div class="absolute phase-0" style="top: 25px"><div style="position: relative; overflow: hidden; height: 400px; width: 500px;">
-                <img class="absolute blur-100 phase-0 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
-                <img class="absolute blur-100 phase-1 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
+                <img class="absolute blur-200 phase-0 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
+                <img class="absolute blur-200 phase-1 down speed-60" src="assets/rainl2.png" width="500px" height="500px" />
             </div></div>
             <img class="absolute blur-100 phase-0 down speed-100" src="assets/rain.png" width="500px" height="500px" />
             <img class="absolute blur-100 phase-1 down speed-100" src="assets/rain.png" width="500px" height="500px" />
