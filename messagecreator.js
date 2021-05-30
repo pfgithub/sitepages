@@ -150,8 +150,9 @@ const {html, svg} = uhtml;
 const urlParams = new URLSearchParams(location.search);
 const editbase = urlParams.get("content");
 const editmsglink = urlParams.get("msglink");
+const dopostmsg = !!urlParams.get("post");
 
-let data = {status: "none", text: editbase || "", editing: editmsglink || undefined};
+let data = {status: "none", text: editbase || "", editing: editmsglink || ("" + dopostmsg) || undefined, posting: dopostmsg};
 
 function oninput(e) {
     data.text = e.currentTarget.value;
@@ -175,7 +176,7 @@ const render = () => html`
         uploading: () => "",
         error: () => html`<span style="err">${data.errmsg}</span>`,
         uploaded: () => data.editing
-            ? html`<code>ip!updatemsg ${data.editing} M${data.link}y</code>`
+            ? html`<code>ip!${data.posting ? "postmsg" : "updatemsg "+data.editing} M${data.link}y</code>`
             : html`<code>ip!sendmsg c${data.link}R</code>`,
     }[data.status]()}
 `;
