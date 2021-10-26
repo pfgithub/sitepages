@@ -152,7 +152,7 @@ const editbase = urlParams.get("content");
 const editmsglink = urlParams.get("msglink");
 const dopostmsg = !!urlParams.get("post");
 
-let data = {status: "none", text: editbase || "", editing: editmsglink || ("" + dopostmsg) || undefined, posting: dopostmsg};
+let data = {status: "none", text: editbase || "", editing: editmsglink || (dopostmsg ? "true" : undefined) || undefined, posting: dopostmsg};
 
 function oninput(e) {
     data.text = e.currentTarget.value;
