@@ -25,7 +25,7 @@
       const res = document.createElement("video");
       res.src = src;
       res.style.display = "block";
-      res.style.width = "100%";
+      res.style.width = "min(100%, 500px)";
       res.controls = true;
       res.setAttribute("playsinline", "");
       return res;
