@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Sync the videos game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
 
@@ -24,19 +25,26 @@
       const res = document.createElement("video");
       res.src = src;
       res.style.display = "block";
+      res.style.width = "100%";
       res.controls = true;
       return res;
     };
     
     const syncedness = document.createElement("h1");
+    syncedness.style.fontFamily = "monospace";
     main.appendChild(syncedness);
+    const s2 = document.createElement("p");
+    s2.textContent = "(closer to 0 is better)";
+    main.appendChild(s2);
     const v1 = video(v1src);
     main.appendChild(v1);
     const v2 = video(v2src);
     main.appendChild(v2);
     
     const loop = () => {
-      syncedness.textContent = "Sync: " + (v1.currentTime - v2.currentTime) + " (closer to 0 is better)";
+      let rvv = (v1.currentTime - v2.currentTime).toFixed(10);
+      if(!rvv.startsWith("-")) rvv = "+" + rvv;
+      syncedness.textContent = "Sync: " + rvv;
       af = window.requestAnimationFrame(loop);
     };
     let af = window.requestAnimationFrame(loop);
