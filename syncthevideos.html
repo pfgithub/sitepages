@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>Sync the videos game</title>
+  </head>
+  <body>
+
+// https://cdn.discordapp.com/attachments/439201789758406666/904110011112910938/super_iduol_1.mp4
+// https://cdn.discordapp.com/attachments/439201789758406666/904110036207407104/super_iduol_2.mp4
+
+<script>
+  
+  {
+    if(window.__on_cleanup) window.__on_cleanup.forEach(i => i());
+    window.__on_cleanup = [];
+    
+    const urlquery = new URLSearchParams(location.search);
+    let v1src = urlquery.get("v1") || "https://cdn.discordapp.com/attachments/439201789758406666/904110011112910938/super_iduol_1.mp4";
+    let v2src = urlquery.get("v2") || "https://cdn.discordapp.com/attachments/439201789758406666/904110036207407104/super_iduol_2.mp4";
+
+    const main = document.getElementById("main") || document.body;
+    main.innerHTML = "";
+    
+    const video = (src) => {
+      const res = document.createElement("video");
+      res.src = src;
+      res.style.display = "block";
+      res.controls = true;
+      return res;
+    };
+    
+    const syncedness = document.createElement("h1");
+    main.appendChild(syncedness);
+    const v1 = video(v1src);
+    main.appendChild(v1);
+    const v2 = video(v2src);
+    main.appendChild(v2);
+    
+    const loop = () => {
+      syncedness.textContent = "Sync: " + (v1.currentTime - v2.currentTime) + " (closer to 0 is better)";
+      af = window.requestAnimationFrame(loop);
+    };
+    let af = window.requestAnimationFrame(loop);
+    
+    window.__on_cleanup.push(() => window.cancelAnimationFrame(af));
+    
+    const v1i = document.createElement("input");
+    v1i.value = v1src;
+    v1i.style.width = "100%";
+    v1i.style.display = "block";
+    main.appendChild(v1i);
+    const v2i = document.createElement("input");
+    v2i.value = v2src;
+    v2i.style.width = "100%";
+    v2i.style.display = "block";
+    main.appendChild(v2i);
+    const ubtn = document.createElement("button");
+    ubtn.textContent = "Update";
+    main.appendChild(ubtn);
+    ubtn.addEventListener("click", () => {
+      v1src = v1i.value;
+      v2src = v2i.value;
+      v1.src = v1src;
+      v2.src = v2src;
+      history.replaceState({}, "title", location.pathname + ("?v1="+encodeURIComponent(v1src)+"&v2="+encodeURIComponent(v2src)) + (location.hash + ""));
+    });
+  }
+  
+</script>
+    
+  </body>
+</html>
