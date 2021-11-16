@@ -40,6 +40,11 @@ var guessEl = el("input").adto(texts);
 var lowerEl = el( "button").adto(buttons).atxt("lower");
 var higherEl = el("button").adto(buttons).atxt("higher");
 var undoEl = el(  "button").adto(buttons).atxt("undo");
+  
+  // input for minimum number
+  // input for maximum number
+  // option to set distribution ("random" | "log2") (log2 will eg have guess 0..4..16. if lt, guess 0..2..4. if gt, guess 4..8..16.
+  // - basically just make centerof log2 that's really simple it seems
 
 lowerEl.onev("click", e => {
   let {min, center} = history.last;
