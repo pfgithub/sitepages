@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Tabconfig</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=">
+    <style>
+      html {
+        background-color: black;
+      }
+    </style>
+	</head>
+	<body>
+    <p id="usagep" style="display:none">
+      set the url to [this page]#your title to do it. example:
+      <a href="#my title">#my title</a>
+    </p>
+    <script>
+      const usagep = document.getElementById("usagep");
+      function setTitle() {
+        const titlev = location.hash.substr(1);
+        if(!titlev) {
+          document.title = "Tabconfig";
+          usagep.style.display = "block";
+        }else{
+          document.title = titlev;
+          usagep.style.display = "none";
+        }
+      }
+      window.addEventListener('hashchange', () => {
+        setTitle();
+      });
+    </script>
+	</body>
+</html>
