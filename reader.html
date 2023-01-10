@@ -1,0 +1,175 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reader</title>
+<meta name="application-name" content="Reader" />
+<meta name="apple-mobile-web-app-title" content="Reader" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+<style>
+
+
+@media (prefers-color-scheme: dark) {
+
+
+html{
+background-color: black;
+color: white;
+margin-bottom: 100vh;
+overflow-wrap: break-word;
+}
+a{
+color: white;
+text-decoration: underline;
+}
+code {
+white-space: pre-wrap;
+}
+
+
+}
+
+</style>
+</head>
+<body>
+
+<input type="file" id="filesel">
+<div id="main"></div>
+
+<script>
+
+//window.addEventListener('error', (event) => {
+    //alert(`${event.type}: ${event.message}\n${event.stack || ""}`);
+    //console.log(event);
+//});
+function alertError(pos, error) {
+alert("" + pos + ": " + error + ": " + error.toString?.() + "\n" + error.stack);
+}
+
+// const a = …
+// atob(base64data);
+// actually let's use a file picker to get the file
+
+let fulltext = [
+
+//{title_html: "chapter one", html: "demo"},
+//{title_html: "chapter two", html: "demo two"},
+
+];
+
+document.getElementById("filesel").onchange = e => {
+const files = e.target.files;
+if(files.length !== 1) return alert("no file or more than one");
+const [file] = files;
+
+const reader = new FileReader();
+reader.onload = e => {
+try {
+useData(e.target.result);
+}catch(e){
+alertError("parsing", e);
+}
+}
+reader.onError = e => alertError("reading", e);
+reader.readAsText(file);
+// todo display load indicator
+};
+
+function useData(res) {
+//alert("got file str len:" + res.length);
+// 1. parse the file (set innerHTML of an unmounted div
+//const parseq = document.createElement("div");
+//parseq.innerHTML = res;
+
+// alternative: cheat
+// split("h1");
+// 2. fill the fulltext array
+fulltext = res.split("<h1").slice(1).map(v => {
+return {title_html: v.split(">")[1]?.split("<")[0], html: "<h1" + v};
+});
+// 3. go("toc");
+goto("toc");
+}
+
+window.goto = (v) => {
+state = {page: v};
+update();
+}
+
+const main = document.getElementById("main");
+main.innerHTML = "hi!";
+
+// may be able to use a <template> or something?
+
+let state = {page: "toc"};
+
+function update() {try {
+window.scrollTo(0,0);
+const pgbody = state.page === "toc" ? `
+<h1>TOC</h1>
+<ol>
+${fulltext.map((chapter, i) => {
+return `
+<li><button onclick="goto(${i})">${chapter.title_html}</button></li>
+`;
+}).join("") || "No file selected."}
+</ol>
+` : fulltext[state.page].html;
+const links = state.page === "toc" ? "" : `
+<div>
+<div><button onclick="goto('toc')">
+TOC
+</button></div>
+${
+fulltext[state.page - 1] ? `
+<div>
+prev: <button onclick="goto(${state.page - 1})">${fulltext[state.page - 1].title_html}</button>
+</div>
+` : ""
+}
+${
+fulltext[state.page + 1] ? `
+<div>
+next: <button onclick="goto(${state.page + 1})">${fulltext[state.page + 1].title_html}</button>
+
+</div>
+` : ""
+}
+</div>
+`
+main.innerHTML = `
+<div>
+${links}
+${pgbody}
+${links}
+</div>
+`
+}catch(e){
+alertError("rendering", e);
+}};
+
+update();
+//document.body.innerHTML = content_html;
+
+
+
+
+
+
+
+//const fulltext = [
+// {title_html: string, html: string};
+//];
+// TODO: read from a template element
+
+</script>
+
+
+</body>
+</html>
