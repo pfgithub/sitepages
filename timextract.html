@@ -3,7 +3,7 @@ title: Timextract
 layout: default
 ---
 
-<div id="maincontent" style="white-space: pre"></div>
+<div id="maincontent" style="white-space: pre-wrap"></div>
 
 <script>
 {
@@ -37,17 +37,17 @@ let div = s => ({type: "div", name: s, mode: "set", set: (q,v) => q.textContent 
 function printmins(int) {
 const mins = int % 60;
 const hrs = Math.floor(int / 60);
-return (hrs !== 0 ? hrs + "h" : "") + mins.toString().padStart(2, "0") + "min";
+return (hrs !== 0 ? hrs + "h" : "") + mins.toString().padStart(hrs !== 0 ? 2 : 0, "0") + "min";
 }
 
 function docalc(values) {
 
     let reslog = [];
 
-const finalres = printmins(values.split("\n").map(l => l.trim()).filter(l => l).map(l => {
-const [date, a] = l.split(": ");
-return a;
-}).map(l => {
+const finalres = printmins(values.split("\n").map(l => l.trim()).filter(l => l).map(lin => {
+const [date, a] = lin.split(": ");
+const l = a;
+
 const qm = /([0-9]+)([a-z]+)/g;
 const qtimes = [...l.matchAll(qm)];
 let qmintotal = 0;
@@ -67,7 +67,7 @@ reslog.push(date + ": " + printmins(qmintotal));
 return qmintotal;
 }).reduce((t, a) => a + t, 0))
 
-return finalres +":\n\n" + res.log.join("\n");
+return finalres +":\n\n" + reslog.join("\n");
 }
 
 setup([textarea("intext"), div("outtext")], ({intext, outtext}) => {
