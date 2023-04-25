@@ -1,0 +1,80 @@
+---
+title: Timextract
+layout: default
+---
+
+<div id="maincontent" style="white-space: pre"></div>
+
+<script>
+{
+let nodeValue = Symbol("node");
+
+function setup(info, cb){
+let doUpdate = () => {
+let resValues = {};
+info.forEach(i => {
+let resValue = i.get ? i.get(i.node) : i.set ? {set: (v) => i.set(i.node, v)} : {};
+resValue[nodeValue] = i.node;
+resValues[i.name] = resValue;
+});
+cb(resValues);
+};
+info.forEach(i => {
+i.node = document.createElement(i.type);
+if(i.change) {i.change(i.node, () => {
+doUpdate();
+})}
+(document.getElementById("maincontent") || document.body).appendChild(i.node);
+});
+doUpdate();
+}
+
+let input = s => ({type: "input", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let textarea = s => ({type: "textarea", name: s, mode: "get", get: q => q.value, change: (q, cb) => q.addEventListener("input", () => cb())});
+let div = s => ({type: "div", name: s, mode: "set", set: (q,v) => q.textContent = v});
+
+
+function printmins(int) {
+const mins = int % 60;
+const hrs = Math.floor(int / 60);
+return (hrs !== 0 ? hrs + "h" : "") + mins.toString().padStart(2, "0") + "min";
+}
+
+function docalc(values) {
+
+    let reslog = [];
+
+const finalres = printmins(values.split("\n").map(l => l.trim()).filter(l => l).map(l => {
+const [date, a] = l.split(": ");
+return a;
+}).map(l => {
+const qm = /([0-9]+)([a-z]+)/g;
+const qtimes = [...l.matchAll(qm)];
+let qmintotal = 0;
+for(const qtime of qtimes) {
+qmintotal += +qtime[1] * {"h": 60, "min": 1}[qtime[2]]
+}
+const qhmins = /(\d+):(\d+) ?-> ?(\d+):(\d+)/g;
+const qmatches = [...l.matchAll(qhmins)];
+for(let [_, start_h, start_m, end_h, end_m] of qmatches) {
+start_h =+ start_h; start_m =+ start_m; end_h =+ end_h; end_m =+ end_m;
+let start_t = start_h * 60 + start_m;
+let end_t = end_h * 60 + end_m;
+if(end_t < start_t) end_t += 12 * 60;
+qmintotal += end_t - start_t;
+}
+reslog.push(date + ": " + printmins(qmintotal));
+return qmintotal;
+}).reduce((t, a) => a + t, 0))
+
+return finalres +":\n\n" + res.log.join("\n");
+}
+
+setup([textarea("intext"), div("outtext")], ({intext, outtext}) => {
+
+outtext.set(
+docalc(intext)
+);
+});
+}
+</script>
