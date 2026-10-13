@@ -1,0 +1,842 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mouse pusher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one screen. A self-healing cutting mat seen from above fills the middle;
+   a thin status line above it, strength controls below. */
+:root{
+  --bg:#E4E9E5; --ink:#17201C; --muted:#56635D; --line:#BFCAC4; --btn:#F2F5F3;
+  --btnOn:#17201C; --btnOnInk:#F2F5F3; --ok:#2B7A57; --bad:#B83A2E;
+  /* the mat and objects are physical things: same colours in both themes */
+  --mat:#2F6B55; --matGrid:rgba(255,255,255,.09); --matMajor:rgba(255,255,255,.2);
+  --static:#1D2723; --wall:#F1E9D2; --mouseBody:#FFFFFF; --mouseEdge:#0B0F0E;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1513; --ink:#E2E9E5; --muted:#8C9A93; --line:#28332E; --btn:#18201D;
+    --btnOn:#E2E9E5; --btnOnInk:#0F1513; --ok:#5DBF8F; --bad:#FF6B5B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --ink:#E2E9E5; --muted:#8C9A93; --line:#28332E; --btn:#18201D;
+  --btnOn:#E2E9E5; --btnOnInk:#0F1513; --ok:#5DBF8F; --bad:#FF6B5B; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  display:flex;flex-direction:column;overflow:hidden;padding-inline:16px;
+  -webkit-user-select:none;user-select:none;
+}
+header,footer{width:100%;max-width:520px;margin:0 auto}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-block:12px 8px}
+h1{font-family:var(--display);font-weight:600;font-size:1.25rem;margin:0;letter-spacing:-.01em}
+#audit{text-align:right;line-height:1.25;font-variant-numeric:tabular-nums}
+#auditMain{font-weight:600;color:var(--ok)}
+#auditMain.bad{color:var(--bad)}
+#auditSub{font-size:.8rem;color:var(--muted)}
+#stage{flex:1;min-height:0;position:relative}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+#hint{
+  position:absolute;left:0;right:0;top:46%;text-align:center;pointer-events:none;
+  color:#F1E9D2;font-weight:500;font-size:.95rem;padding-inline:24px;transition:opacity .4s;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);
+}
+footer{display:flex;flex-direction:column;gap:6px;padding-block:8px 12px}
+.row{display:flex;gap:8px;align-items:center}
+.seg{display:flex;flex:1;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+button{
+  flex:1;font:inherit;font-size:.9rem;font-weight:500;color:var(--ink);background:var(--btn);
+  border:1px solid var(--line);border-radius:10px;padding:10px 6px;min-height:44px;cursor:pointer;
+}
+#bReset{flex:0 0 auto;padding-inline:18px}
+button[aria-pressed="true"]{background:var(--btnOn);color:var(--btnOnInk)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#note{font-size:.8rem;color:var(--muted);text-wrap:balance}
+@media (prefers-reduced-motion: reduce){#hint{transition:none}}
+</style>
+
+<header>
+  <h1>Mouse pusher</h1>
+  <div id="audit" aria-live="polite">
+    <div id="auditMain">0 overlaps</div>
+    <div id="auditSub">lag 0.0 px</div>
+  </div>
+</header>
+<div id="stage">
+  <canvas id="cv" aria-label="Top-down play area. The cursor character follows your mouse."></canvas>
+  <div id="hint">Click the mat to take control. Press Esc to let go.</div>
+</div>
+<footer>
+  <div class="row">
+    <div class="seg" role="group" aria-label="Push strength">
+      <button id="sWeak" aria-pressed="false">Weak</button>
+      <button id="sMedium" aria-pressed="true">Medium</button>
+      <button id="sStrong" aria-pressed="false">Strong</button>
+    </div>
+    <button id="bReset">Reset</button>
+  </div>
+  <div id="note">Weak can't budge the big crate. Lag shows how far the mouse is behind your pointer.</div>
+</footer>
+
+<script>
+"use strict";
+// ===== PHYSICS =====
+const W = 480, H = 300;           // world in game px; 1 game px = 1 screen px
+const G = 0.25;                   // gap contacts settle at
+const G_MIN = 0.05;               // hard floor on vertex-to-edge gap during motion
+const PUSH_MAX = 60;              // px/s cap on the move-only push back out to G
+const H_MAX = 1 / 240;            // longest physics substep; frames are split to stay under it
+const DT_MAX = 1 / 20;            // a longer hitch (tab switch) simulates only this much
+const MU_C = 0.4;                 // friction between objects
+const MU_G = 600;                 // ground friction: a sliding box decelerates at 600 px/s^2
+const DENSITY = 0.01;
+const PLAYER_MASS = 1e-5;         // nearly massless, so free motion costs almost no force
+const SLEEP_V = 6, SLEEP_T = 0.3, WAKE_V = 3;
+const MAX_V = 3000;               // safety cap for boxes; the mouse is not capped
+const F_REF = 20 * 20 * DENSITY * MU_G; // force that keeps a 20x20 box sliding
+const STRENGTH = { weak: 1.5, medium: 4, strong: 12 };
+let pushForce = F_REF * STRENGTH.medium;
+
+let bodies = [], player = null;
+const target = { x: 0, y: 0 };
+let overlapCount = 0, pairChecks = 0;
+
+function makeBox(x, y, hw, hh, a, kind, color) {
+  const b = { x, y, a, vx: 0, vy: 0, w: 0, hw, hh, kind, color,
+    isStatic: kind === "static", r: Math.hypot(hw, hh), v: new Float64Array(8),
+    asleep: false, sleepT: 0, forced: false, di: -1, tLeft: 0 };
+  if (kind === "static") { b.invM = 0; b.invI = 0; }
+  else if (kind === "player") { b.invM = 1 / PLAYER_MASS; b.invI = 0; }
+  else {
+    const m = 4 * hw * hh * DENSITY;
+    b.invM = 1 / m; b.invI = 12 / (m * (4 * hw * hw + 4 * hh * hh));
+  }
+  updVerts(b);
+  return b;
+}
+const LX = [-1, 1, 1, -1], LY = [-1, -1, 1, 1];
+function updVerts(b) {
+  const c = Math.cos(b.a), s = Math.sin(b.a), v = b.v;
+  for (let i = 0; i < 4; i++) {
+    const lx = LX[i] * b.hw, ly = LY[i] * b.hh;
+    v[2 * i] = b.x + lx * c - ly * s; v[2 * i + 1] = b.y + lx * s + ly * c;
+  }
+}
+
+// ---------- geometry ----------
+function separatedOn(va, vb) {
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) & 3;
+    const nx = -(va[2 * j + 1] - va[2 * i + 1]), ny = va[2 * j] - va[2 * i];
+    let minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity;
+    for (let k = 0; k < 4; k++) {
+      const pa = va[2 * k] * nx + va[2 * k + 1] * ny, pb = vb[2 * k] * nx + vb[2 * k + 1] * ny;
+      if (pa < minA) minA = pa; if (pa > maxA) maxA = pa;
+      if (pb < minB) minB = pb; if (pb > maxB) maxB = pb;
+    }
+    if (maxA <= minB || maxB <= minA) return true;
+  }
+  return false;
+}
+function overlaps(va, vb) { return !separatedOn(va, vb) && !separatedOn(vb, va); } // interiors intersect
+const clamp01 = t => t < 0 ? 0 : t > 1 ? 1 : t;
+let C1X, C1Y, C2X, C2Y;
+function segSeg(p1x, p1y, q1x, q1y, p2x, p2y, q2x, q2y) {
+  const d1x = q1x - p1x, d1y = q1y - p1y, d2x = q2x - p2x, d2y = q2y - p2y;
+  const rx = p1x - p2x, ry = p1y - p2y;
+  const a = d1x * d1x + d1y * d1y, e = d2x * d2x + d2y * d2y, f = d2x * rx + d2y * ry;
+  let s, t;
+  if (a <= 1e-12 && e <= 1e-12) { s = 0; t = 0; }
+  else if (a <= 1e-12) { s = 0; t = clamp01(f / e); }
+  else {
+    const c = d1x * rx + d1y * ry;
+    if (e <= 1e-12) { t = 0; s = clamp01(-c / a); }
+    else {
+      const b = d1x * d2x + d1y * d2y, den = a * e - b * b;
+      s = den > 1e-12 ? clamp01((b * f - c * e) / den) : 0;
+      t = (b * s + f) / e;
+      if (t < 0) { t = 0; s = clamp01(-c / a); }
+      else if (t > 1) { t = 1; s = clamp01((b - c) / a); }
+    }
+  }
+  C1X = p1x + d1x * s; C1Y = p1y + d1y * s; C2X = p2x + d2x * t; C2Y = p2y + d2y * t;
+  const dx = C2X - C1X, dy = C2Y - C1Y;
+  return dx * dx + dy * dy;
+}
+let PD_NX = 0, PD_NY = 1;
+function polyDist(va, vb) { // distance between convex quads; sets PD_N from A toward B
+  if (overlaps(va, vb)) return 0;
+  let best = Infinity, ax = 0, ay = 0, bx = 0, by = 0;
+  for (let i = 0; i < 4; i++) {
+    const i2 = (i + 1) & 3;
+    for (let j = 0; j < 4; j++) {
+      const j2 = (j + 1) & 3;
+      const d2 = segSeg(va[2 * i], va[2 * i + 1], va[2 * i2], va[2 * i2 + 1],
+                        vb[2 * j], vb[2 * j + 1], vb[2 * j2], vb[2 * j2 + 1]);
+      if (d2 < best) { best = d2; ax = C1X; ay = C1Y; bx = C2X; by = C2Y; }
+    }
+  }
+  const d = Math.sqrt(best);
+  if (d > 1e-6) { PD_NX = (bx - ax) / d; PD_NY = (by - ay) / d; } else touchNormal(va, vb);
+  return d;
+}
+function touchNormal(va, vb) { // normal for touching shapes: SAT axis of largest separation
+  let bestSep = -Infinity;
+  for (const [P, Q, sgn] of [[va, vb, 1], [vb, va, -1]]) {
+    for (let i = 0; i < 4; i++) {
+      const j = (i + 1) & 3;
+      let nx = P[2 * j + 1] - P[2 * i + 1], ny = -(P[2 * j] - P[2 * i]);
+      const L = Math.hypot(nx, ny); nx /= L; ny /= L;
+      let maxP = -Infinity, minQ = Infinity;
+      for (let k = 0; k < 4; k++) {
+        maxP = Math.max(maxP, P[2 * k] * nx + P[2 * k + 1] * ny);
+        minQ = Math.min(minQ, Q[2 * k] * nx + Q[2 * k + 1] * ny);
+      }
+      if (minQ - maxP > bestSep) { bestSep = minQ - maxP; PD_NX = nx * sgn; PD_NY = ny * sgn; }
+    }
+  }
+}
+function pointPolyDist(px, py, v) {
+  let best = Infinity;
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) & 3, ax = v[2 * i], ay = v[2 * i + 1], ex = v[2 * j] - ax, ey = v[2 * j + 1] - ay;
+    const t = clamp01(((px - ax) * ex + (py - ay) * ey) / (ex * ex + ey * ey));
+    const dx = px - (ax + ex * t), dy = py - (ay + ey * t);
+    best = Math.min(best, dx * dx + dy * dy);
+  }
+  return Math.sqrt(best);
+}
+function pointInBox(b, px, py) {
+  const c = Math.cos(b.a), s = Math.sin(b.a), dx = px - b.x, dy = py - b.y;
+  return Math.abs(dx * c + dy * s) <= b.hw && Math.abs(-dx * s + dy * c) <= b.hh;
+}
+function segNearBox(x0, y0, x1, y1, b, margin) { // does a segment pass within margin of a box?
+  if (pointInBox(b, x0, y0) || pointInBox(b, x1, y1)) return true;
+  const v = b.v, m2 = margin * margin;
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) & 3;
+    if (segSeg(x0, y0, x1, y1, v[2 * i], v[2 * i + 1], v[2 * j], v[2 * j + 1]) < m2) return true;
+  }
+  return false;
+}
+
+// ---------- the solve ----------
+// Each substep: find the velocities closest to what everything wants such that
+// no contact approaches faster than its gap allows. One box-constrained QP per
+// island of touching bodies, with these rows:
+//   n  contact normal: impulse >= 0
+//   f  contact friction: |impulse| <= MU_C * normal impulse
+//   g  ground friction (top-down): |impulse| <= MU_G * m * h  (sticks, then slides)
+//   m  the cursor's motor: drives it toward its target, |force| <= pushForce in
+//      any direction (a circle, so pushing flat out into a slope leaves the
+//      cursor free to slide along it)
+let rows = [];
+const isFixed = b => b.isStatic || b.asleep;
+function wake(b) { if (b.asleep) { b.asleep = false; b.sleepT = 0; b.vx = b.vy = b.w = 0; } }
+function contactPoints(A, B, d) {
+  const pts = [], tol = 1.0;
+  for (let k = 0; k < 4; k++) {
+    const px = A.v[2 * k], py = A.v[2 * k + 1], dd = pointPolyDist(px, py, B.v);
+    if (dd <= d + tol) pts.push([px, py, dd]);
+  }
+  for (let k = 0; k < 4; k++) {
+    const px = B.v[2 * k], py = B.v[2 * k + 1], dd = pointPolyDist(px, py, A.v);
+    if (dd <= d + tol) pts.push([px, py, dd]);
+  }
+  if (pts.length <= 2) return pts;
+  pts.sort((p, q) => p[2] - q[2]);
+  let far = 1, fd = -1;
+  for (let i = 1; i < pts.length; i++) {
+    const dd = (pts[i][0] - pts[0][0]) ** 2 + (pts[i][1] - pts[0][1]) ** 2;
+    if (dd > fd) { fd = dd; far = i; }
+  }
+  return fd < 0.25 ? [pts[0]] : [pts[0], pts[far]];
+}
+function addContactRow(A, B, px, py, dx, dy, target, kind, normalOf) {
+  const rax = px - A.x, ray = py - A.y, rbx = px - B.x, rby = py - B.y;
+  rows.push({ kind, ia: A.di, ib: B.di, A, B, normalOf, target, push: target, lo: 0, hi: 0,
+    ja: [-dx, -dy, -(rax * dy - ray * dx)], jb: [dx, dy, rbx * dy - rby * dx] });
+}
+function addBodyRow(b, j, target, bound, kind) {
+  rows.push({ kind, ia: b.di, ib: -1, A: b, B: null, normalOf: -1, target, push: 0,
+    lo: -bound, hi: bound, ja: j, jb: null });
+}
+function buildRows(h) {
+  rows.length = 0;
+  for (let i = 0; i < bodies.length; i++) {
+    const A = bodies[i];
+    for (let j = i + 1; j < bodies.length; j++) {
+      const B = bodies[j];
+      if (isFixed(A) && isFixed(B)) continue;
+      const spA = Math.hypot(A.vx, A.vy) + Math.abs(A.w) * A.r;
+      const spB = Math.hypot(B.vx, B.vy) + Math.abs(B.w) * B.r;
+      // Predictive contacts let fast boxes slow down before they arrive. The mouse
+      // doesn't need them for its own speed: it's nearly massless and the mover
+      // stops it exactly at whatever it hits. Leaving its speed out avoids "ghost"
+      // contacts that would slow it when it flies close past a corner.
+      const slop = A === player ? 1 + spB * h * 2 : B === player ? 1 + spA * h * 2 : 2 + (spA + spB) * h * 2;
+      if (Math.hypot(B.x - A.x, B.y - A.y) - A.r - B.r > slop) continue;
+      const d = polyDist(A.v, B.v);
+      if (d >= slop) continue;
+      const nx = PD_NX, ny = PD_NY;
+      for (const [px, py, dd] of contactPoints(A, B, d)) {
+        const target = Math.min(0, -(dd - G) / h);
+        const ni = rows.length;
+        addContactRow(A, B, px, py, nx, ny, target, "n", -1);
+        if (dd < G) rows[ni].push = Math.min(PUSH_MAX, (G - dd) / h);
+        // the cursor slides freely along walls, but grips boxes so it can push them
+        const cursorOnWall = (A === player && B.isStatic) || (B === player && A.isStatic);
+        if (!cursorOnWall) addContactRow(A, B, px, py, -ny, nx, 0, "f", ni);
+      }
+    }
+  }
+}
+function islands(dyn) { // union-find over touching bodies; returns row index lists
+  const par = dyn.map((_, i) => i);
+  const find = i => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+  const touched = new Uint8Array(dyn.length);
+  for (const r of rows) {
+    if (r.ia >= 0) touched[r.ia] = 1;
+    if (r.ib >= 0) touched[r.ib] = 1;
+    if (r.ia >= 0 && r.ib >= 0) par[find(r.ia)] = find(r.ib);
+  }
+  return { find, touched };
+}
+function addBodyRows(dyn, touched, h) {
+  for (const b of dyn) {
+    if (!touched[b.di]) continue;
+    if (b === player) {
+      const f = pushForce * h / Math.SQRT2; // first pass: the square inside the circle
+      addBodyRow(b, [1, 0, 0], b.vx, f, "m"); addBodyRow(b, [0, 1, 0], b.vy, f, "m");
+    } else {
+      const m = 1 / b.invM, fl = MU_G * m * h * 0.85;
+      addBodyRow(b, [1, 0, 0], 0, fl, "g"); addBodyRow(b, [0, 1, 0], 0, fl, "g");
+      addBodyRow(b, [0, 0, 1], 0, fl * (b.hw + b.hh) * 0.35, "g");
+    }
+  }
+}
+function groundFrictionFree(b, h) { // bodies touching nothing: friction in closed form
+  const v = Math.hypot(b.vx, b.vy), dv = MU_G * h;
+  const k = v > dv ? 1 - dv / v : 0; b.vx *= k; b.vy *= k;
+  const dw = MU_G * h * 0.35 * (b.hw + b.hh) * 12 / (4 * b.hw * b.hw + 4 * b.hh * b.hh);
+  b.w = Math.abs(b.w) > dw ? b.w - Math.sign(b.w) * dw : 0;
+}
+function cholSolve(M, r, k) {
+  for (let j = 0; j < k; j++) {
+    let s = M[j * k + j];
+    for (let p = 0; p < j; p++) s -= M[j * k + p] ** 2;
+    const L = Math.sqrt(Math.max(s, 1e-300));
+    M[j * k + j] = L;
+    for (let i = j + 1; i < k; i++) {
+      let t = M[i * k + j];
+      for (let p = 0; p < j; p++) t -= M[i * k + p] * M[j * k + p];
+      M[i * k + j] = t / L;
+    }
+  }
+  const y = new Float64Array(k);
+  for (let i = 0; i < k; i++) { let t = r[i]; for (let p = 0; p < i; p++) t -= M[i * k + p] * y[p]; y[i] = t / M[i * k + i]; }
+  for (let i = k - 1; i >= 0; i--) { let t = y[i]; for (let p = i + 1; p < k; p++) t -= M[p * k + i] * y[p]; y[i] = t / M[i * k + i]; }
+  return y;
+}
+function boxQP(A, c, lo, hi, x, n) { // min 1/2 x'Ax - c'x, lo <= x <= hi (primal active set)
+  const fixed = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    x[i] = Math.min(hi[i], Math.max(lo[i], x[i]));
+    if (x[i] === lo[i] || x[i] === hi[i]) fixed[i] = 1;
+  }
+  let scale = 1;
+  for (let i = 0; i < n; i++) scale = Math.max(scale, Math.abs(c[i]));
+  const tol = 1e-9 * scale;
+  let single = false;
+  for (let iter = 0; iter < 6 * n + 20; iter++) {
+    const F = [];
+    for (let i = 0; i < n; i++) if (!fixed[i]) F.push(i);
+    const k = F.length;
+    let y = null;
+    if (k > 0) {
+      const M = new Float64Array(k * k), r = new Float64Array(k);
+      for (let a = 0; a < k; a++) {
+        const i = F[a];
+        let t = c[i];
+        for (let j = 0; j < n; j++) if (fixed[j]) t -= A[i * n + j] * x[j];
+        r[a] = t;
+        for (let b = 0; b < k; b++) M[a * k + b] = A[i * n + F[b]];
+      }
+      y = cholSolve(M, r, k);
+    }
+    let alpha = 1, block = -1;
+    for (let a = 0; a < k; a++) {
+      const i = F[a], dx = y[a] - x[i];
+      if (dx < 0 && y[a] < lo[i]) { const t = (lo[i] - x[i]) / dx; if (t < alpha) { alpha = t; block = i; } }
+      if (dx > 0 && y[a] > hi[i]) { const t = (hi[i] - x[i]) / dx; if (t < alpha) { alpha = t; block = i; } }
+    }
+    for (let a = 0; a < k; a++) x[F[a]] += alpha * (y[a] - x[F[a]]);
+    if (block >= 0) {
+      if (alpha <= 1e-14) single = true;
+      for (let a = 0; a < k; a++) {
+        const i = F[a];
+        if (x[i] <= lo[i] + 1e-12 * (1 + Math.abs(lo[i]))) { x[i] = lo[i]; fixed[i] = 1; }
+        else if (x[i] >= hi[i] - 1e-12 * (1 + Math.abs(hi[i]))) { x[i] = hi[i]; fixed[i] = 1; }
+      }
+      continue;
+    }
+    let released = false, worst = -1, worstV = 0;
+    for (let i = 0; i < n; i++) {
+      if (!fixed[i] || lo[i] === hi[i]) continue;
+      let g = -c[i];
+      for (let j = 0; j < n; j++) g += A[i * n + j] * x[j];
+      const v = x[i] === lo[i] ? -g : x[i] === hi[i] ? g : 0;
+      if (v > tol) {
+        if (single) { if (v > worstV) { worstV = v; worst = i; } }
+        else { fixed[i] = 0; released = true; }
+      }
+    }
+    if (worst >= 0) { fixed[worst] = 0; released = true; }
+    if (!released) return;
+  }
+}
+function solveIsland(idx, dyn, h, pushPass) {
+  const n = idx.length;
+  if (n === 0) return;
+  const R = idx.map(i => rows[i]);
+  const local = new Map(idx.map((g, l) => [g, l]));
+  const A = new Float64Array(n * n), c = new Float64Array(n);
+  const inv = b => [dyn[b].invM, dyn[b].invM, dyn[b].invI];
+  function build() {
+    for (let i = 0; i < n; i++) {
+      const ri = R[i];
+      let jv = 0;
+      for (const [bi, ji] of [[ri.ia, ri.ja], [ri.ib, ri.jb]]) {
+        if (bi < 0) continue;
+        const b = dyn[bi]; jv += ji[0] * b.vx + ji[1] * b.vy + ji[2] * b.w;
+      }
+      c[i] = (pushPass ? (ri.kind === "n" ? ri.push : 0) : ri.target) - jv;
+      for (let j = i; j < n; j++) {
+        const rj = R[j];
+        let s = 0;
+        for (const [bi, ji] of [[ri.ia, ri.ja], [ri.ib, ri.jb]]) {
+          if (bi < 0) continue;
+          for (const [bj, jj] of [[rj.ia, rj.ja], [rj.ib, rj.jb]]) {
+            if (bj !== bi) continue;
+            const m = inv(bi);
+            s += ji[0] * m[0] * jj[0] + ji[1] * m[1] * jj[1] + ji[2] * m[2] * jj[2];
+          }
+        }
+        A[i * n + j] = s; A[j * n + i] = s;
+      }
+    }
+    // tiny relative regularisation: rows on one body are often redundant
+    for (let i = 0; i < n; i++) A[i * n + i] += 1e-9 * A[i * n + i] + 1e-12;
+  }
+  build();
+  const lo = new Float64Array(n), hi = new Float64Array(n), x = new Float64Array(n);
+  // the motor's two rows; after each pass they are turned to face the motor force
+  // just found, with the full force allowed along it and only what's left of the
+  // circle across it, so the force limit converges to a circle
+  const mRows = []; for (let i = 0; i < n; i++) if (R[i].kind === "m") mRows.push(i);
+  const fMax = pushForce * h;
+  const passes = pushPass ? 1 : 4;
+  for (let pass = 0; pass < passes; pass++) {
+    for (let i = 0; i < n; i++) {
+      const r = R[i];
+      if (r.kind === "n") { lo[i] = 0; hi[i] = Infinity; }
+      else if (pushPass) { lo[i] = 0; hi[i] = 0; } // the push is frictionless and motorless
+      else if (r.kind === "f") { const f = MU_C * x[local.get(r.normalOf)]; lo[i] = -f; hi[i] = f; }
+      else { lo[i] = r.lo; hi[i] = r.hi; }
+    }
+    boxQP(A, c, lo, hi, x, n);
+    if (pushPass || mRows.length !== 2 || pass === passes - 1) continue;
+    const [i0, i1] = mRows, r0 = R[i0], r1 = R[i1];
+    const Mx = x[i0] * r0.ja[0] + x[i1] * r1.ja[0], My = x[i0] * r0.ja[1] + x[i1] * r1.ja[1];
+    const Mm = Math.hypot(Mx, My);
+    if (Mm < 1e-12 * fMax) continue;
+    const ux = Mx / Mm, uy = My / Mm, b = r0.A;
+    r0.ja = [ux, uy, 0]; r1.ja = [-uy, ux, 0];
+    r0.target = ux * b.vx + uy * b.vy; r1.target = -uy * b.vx + ux * b.vy;
+    const along = Math.min(Mm, fMax), across = Math.sqrt(Math.max(0, fMax * fMax - along * along));
+    r0.lo = -fMax; r0.hi = fMax; r1.lo = -across; r1.hi = across;
+    x[i0] = along; x[i1] = 0;
+    build();
+  }
+  if (!pushPass) { // something pressing a sleeper harder than its ground friction wakes it
+    for (let i = 0; i < n; i++) {
+      const r = R[i];
+      if (r.kind !== "n" || x[i] <= 0) continue;
+      const S = r.A.asleep ? r.A : r.B.asleep ? r.B : null;
+      if (S && x[i] > MU_G * h / S.invM) wake(S);
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const r = R[i], l = x[i];
+    for (const [bi, ji] of [[r.ia, r.ja], [r.ib, r.jb]]) {
+      if (bi < 0) continue;
+      const b = dyn[bi];
+      b.vx += b.invM * ji[0] * l; b.vy += b.invM * ji[1] * l; b.w += b.invI * ji[2] * l;
+    }
+  }
+}
+function solveAll(dyn, h, pushPass) {
+  const { find } = islands(dyn);
+  const groups = new Map();
+  rows.forEach((r, i) => {
+    const key = find(r.ia >= 0 ? r.ia : r.ib);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(i);
+  });
+  for (const idx of groups.values()) solveIsland(idx, dyn, h, pushPass);
+}
+
+// ---------- the mover: the only code that changes positions ----------
+// Per-vertex conservative advancement: two convex shapes that start apart can
+// only begin to overlap when a vertex of one touches the other. Each vertex is
+// kept outside one edge's half-plane (whichever allows the longest step) using
+//   phi(t) >= phi0 + phi'0 t - M t^2 / 2
+// with phi'0 exact and M bounding the curvature from rotation. Provably safe,
+// and thickness doesn't matter, so a 1 px mouse can't slip through a 1 px wall.
+function integ(b, t) { b.x += b.vx * t; b.y += b.vy * t; b.a += b.w * t; updVerts(b); }
+function nearby(b, reach) {
+  const out = [];
+  for (const o of bodies) if (o !== b && Math.hypot(o.x - b.x, o.y - b.y) - b.r - o.r <= reach) out.push(o);
+  return out;
+}
+const EN = new Float64Array(8), EH = new Float64Array(4);
+function edgesOf(p) {
+  const v = p.v;
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) & 3;
+    let nx = v[2 * j + 1] - v[2 * i + 1], ny = -(v[2 * j] - v[2 * i]);
+    const L = Math.hypot(nx, ny); nx /= L; ny /= L;
+    if (nx * (p.x - v[2 * i]) + ny * (p.y - v[2 * i + 1]) > 0) { nx = -nx; ny = -ny; }
+    EN[2 * i] = nx; EN[2 * i + 1] = ny; EH[i] = nx * v[2 * i] + ny * v[2 * i + 1];
+  }
+}
+function safeTime(phi0, d1, M, rem) { // largest s with phi0 + d1 s - M s^2/2 >= floor
+  const floor = Math.min(G_MIN, phi0), C = phi0 - floor, a = 0.5 * M;
+  let s;
+  if (a < 1e-12) s = d1 >= 0 ? rem : C / -d1;
+  else s = (d1 + Math.sqrt(d1 * d1 + 4 * a * C)) / (2 * a);
+  return s < rem ? (s > 0 ? s : 0) : rem;
+}
+function stepLimit(b, o, rem) {
+  let s = rem;
+  const vx = b.vx, vy = b.vy, w = b.w, vmag = Math.hypot(vx, vy), w2 = w * w;
+  edgesOf(o);
+  for (let k = 0; k < 4; k++) {
+    const px = b.v[2 * k], py = b.v[2 * k + 1], rx = px - b.x, ry = py - b.y;
+    const M = w2 * Math.hypot(rx, ry), pvx = vx - w * ry, pvy = vy + w * rx;
+    let sk = 0;
+    for (let e = 0; e < 4 && sk < s; e++) {
+      const phi = EN[2 * e] * px + EN[2 * e + 1] * py - EH[e];
+      if (phi > 0) sk = Math.max(sk, safeTime(phi, EN[2 * e] * pvx + EN[2 * e + 1] * pvy, M, s));
+    }
+    s = Math.min(s, sk);
+    if (s <= 0) return 0;
+  }
+  edgesOf(b);
+  for (let k = 0; k < 4; k++) {
+    const qx = o.v[2 * k], qy = o.v[2 * k + 1], ux = qx - b.x, uy = qy - b.y;
+    const M = w2 * (Math.hypot(ux, uy) + vmag * s) + 2 * Math.abs(w) * vmag;
+    let sk = 0;
+    for (let e = 0; e < 4 && sk < s; e++) {
+      const nx = EN[2 * e], ny = EN[2 * e + 1], phi = nx * qx + ny * qy - EH[e];
+      if (phi > 0) sk = Math.max(sk, safeTime(phi, w * (-ny * ux + nx * uy) - (nx * vx + ny * vy), M, s));
+    }
+    s = Math.min(s, sk);
+    if (s <= 0) return 0;
+  }
+  return s;
+}
+function moveBody(b, h) { // returns time used
+  const sp = Math.hypot(b.vx, b.vy) + Math.abs(b.w) * b.r;
+  if (sp < 1e-9) return h;
+  const others = nearby(b, sp * h + 1);
+  let t = 0;
+  for (let it = 0; it < 24 && t < h - 1e-12; it++) {
+    const rem = h - t;
+    let s = rem;
+    for (const o of others) { s = Math.min(s, stepLimit(b, o, s)); if (s <= 0) break; }
+    if (s <= rem * 1e-6) return t;
+    const sx = b.x, sy = b.y, sa = b.a;
+    integ(b, s);
+    if (others.some(o => overlaps(b.v, o.v))) { b.x = sx; b.y = sy; b.a = sa; updVerts(b); return t; }
+    t += s;
+  }
+  return t;
+}
+function moveAll(dyn, h) { // blocked bodies retry after the ones in front have moved
+  for (const b of dyn) b.tLeft = h;
+  for (let pass = 0; pass < dyn.length + 2; pass++) {
+    let progress = false;
+    for (const b of dyn) {
+      if (b.tLeft <= h * 1e-6) continue;
+      const used = moveBody(b, b.tLeft);
+      if (used > 0) { b.tLeft -= used; progress = true; }
+    }
+    if (!progress) break;
+  }
+}
+
+// ---------- step ----------
+function substep(h, k, nSub) {
+  // the mouse wants to land exactly on its target by the end of this frame
+  const tFrame = (nSub - k) * h;
+  player.vx = (target.x - player.x) / tFrame; player.vy = (target.y - player.y) / tFrame; player.w = 0;
+  for (const b of bodies) b.forced = false;
+  player.forced = true; // a body with an external force (the motor) never sleeps
+  for (const a of bodies) { // anything awake and moving wakes sleepers it touches
+    if (a.isStatic || a.asleep) continue;
+    const sp = Math.hypot(a.vx, a.vy) + Math.abs(a.w) * a.r;
+    if (sp < WAKE_V) continue;
+    for (const o of bodies) {
+      if (!o.asleep || Math.hypot(o.x - a.x, o.y - a.y) - o.r - a.r > 2 + sp * h * 2) continue;
+      if (a === player && polyDist(a.v, o.v) > 1 &&
+          !segNearBox(a.x, a.y, a.x + a.vx * h, a.y + a.vy * h, o, 2)) continue;
+      if (polyDist(a.v, o.v) < 2 + sp * h * 2) wake(o);
+    }
+  }
+  const dyn = bodies.filter(b => !b.isStatic && !b.asleep);
+  bodies.forEach(b => { b.di = -1; });
+  dyn.forEach((b, i) => { b.di = i; });
+  for (const b of dyn) {
+    if (b === player) continue;
+    const v = Math.hypot(b.vx, b.vy);
+    if (v > MAX_V) { b.vx *= MAX_V / v; b.vy *= MAX_V / v; }
+  }
+  buildRows(h);
+  const { touched } = islands(dyn);
+  for (const b of dyn) if (!touched[b.di] && b !== player) groundFrictionFree(b, h);
+  addBodyRows(dyn, touched, h);
+  solveAll(dyn, h, false);
+  // split impulse: contacts closer than G get pushed back out for the move only
+  let saved = null;
+  if (rows.some(r => r.kind === "n" && r.push > 0)) {
+    saved = dyn.map(b => [b.vx, b.vy, b.w]);
+    solveAll(dyn, h, true);
+  }
+  moveAll(dyn, h);
+  if (saved) dyn.forEach(b => { const v = saved[b.di]; b.vx = v[0]; b.vy = v[1]; b.w = v[2]; });
+  player.w = 0;
+  for (const b of dyn) {
+    const sp = Math.hypot(b.vx, b.vy) + Math.abs(b.w) * b.r;
+    if (sp < SLEEP_V && !b.forced) b.sleepT += h; else b.sleepT = 0;
+    if (b.sleepT > SLEEP_T) { b.asleep = true; b.vx = b.vy = b.w = 0; }
+  }
+}
+// one call per displayed frame, whatever the refresh rate
+function step(dt = 1 / 60) {
+  dt = Math.min(dt, DT_MAX);
+  const nSub = Math.max(1, Math.ceil(dt / H_MAX - 1e-9)), h = dt / nSub;
+  for (let k = 0; k < nSub; k++) substep(h, k, nSub);
+  for (let i = 0; i < bodies.length; i++)
+    for (let j = i + 1; j < bodies.length; j++) {
+      if (bodies[i].isStatic && bodies[j].isStatic) continue;
+      pairChecks++;
+      if (overlaps(bodies[i].v, bodies[j].v)) overlapCount++;
+    }
+}
+
+// ---------- scene ----------
+const BOX_COLORS = ["#F2C94C", "#E88C9A", "#5B8DEF", "#E8833A", "#F4EFE3", "#3FB5A3", "#A78BDB", "#D9534F", "#8CC63F"];
+function isClear(b, gap) {
+  return bodies.every(o => o === b || (b.isStatic && o.isStatic) || polyDist(b.v, o.v) >= gap);
+}
+function reset() {
+  bodies = [];
+  const st = (x, y, hw, hh, a) => bodies.push(makeBox(x, y, hw, hh, a, "static"));
+  st(W / 2, -20, W / 2 + 40, 20, 0); st(W / 2, H + 20, W / 2 + 40, 20, 0);   // top, bottom
+  st(-20, H / 2, 20, H / 2 + 40, 0); st(W + 20, H / 2, 20, H / 2 + 40, 0);   // left, right
+  st(170, 105, 0.5, 60, 0);          // 1 px wall
+  st(372, 222, 52, 0.5, -0.55);      // 1 px diagonal wall
+  st(300, 72, 11, 11, 0.4);          // post
+  const boxes = [
+    [92, 228, 22, 16, 0.05],   // the big crate
+    [250, 160, 10, 10, 0], [272, 182, 8, 12, 0.3], [228, 196, 12, 7, -0.2],
+    [400, 110, 9, 9, 0.6], [420, 150, 14, 5, 0], [96, 70, 7, 7, 0.2],
+    [128, 132, 11, 11, -0.4], [330, 270, 10, 6, 0.1]
+  ];
+  boxes.forEach(([x, y, hw, hh, a], i) => {
+    const b = makeBox(x, y, hw, hh, a, "box", BOX_COLORS[i]);
+    if (isClear(b, 1)) bodies.push(b);
+  });
+  player = makeBox(W / 2, H / 2 - 40, 0.5, 0.5, 0, "player");
+  if (!isClear(player, 1)) { player.x = 40; player.y = 40; updVerts(player); }
+  bodies.push(player);
+  target.x = player.x; target.y = player.y;
+}
+
+// ===== UI =====
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const stage = document.getElementById("stage"), hint = document.getElementById("hint");
+const note = document.getElementById("note");
+const auditMain = document.getElementById("auditMain"), auditSub = document.getElementById("auditSub");
+let view = { s: 1, ox: 0, oy: 0, dpr: 1 };
+function resize() {
+  const r = stage.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  const s = Math.min(1, r.width / W, r.height / H);
+  view = { s, ox: Math.round((r.width - W * s) / 2), oy: Math.round((r.height - H * s) / 2), dpr };
+  note.textContent = s >= 1
+    ? "1 screen px of movement = 1 game px. Weak can't budge the big crate. Blocked shows how much of the last frame's movement a wall or box stopped."
+    : `Window too small for 1:1, scaled to ${Math.round(s * 100)}%. Weak can't budge the big crate.`;
+}
+new ResizeObserver(resize).observe(stage);
+function toWorld(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s };
+}
+// Input. With pointer lock (desktop) and with touch, the in-game mouse IS the
+// cursor: each frame its target is its own position plus that frame's movement,
+// so a wall simply eats the movement and nothing builds up behind it.
+// If pointer lock is refused, the mouse follows the real pointer instead.
+let mode = "idle";           // "idle" | "locked" | "follow" | "touch"
+let pendX = 0, pendY = 0;    // movement since the last physics frame, in game px
+let touchLast = null, moved = false;
+const lockable = "requestPointerLock" in cv;
+function setHint(text) { hint.textContent = text; hint.style.opacity = text ? 1 : 0; }
+function startFollow(msg) {
+  mode = "follow"; cv.style.cursor = "none";
+  setHint(msg || "");
+}
+function requestLock() {
+  try {
+    const p = cv.requestPointerLock({ unadjustedMovement: true });
+    if (p && p.catch) p.catch(() => {
+      try { const q = cv.requestPointerLock(); if (q && q.catch) q.catch(lockRefused); } catch { lockRefused(); }
+    });
+  } catch { lockRefused(); }
+}
+function lockRefused() {
+  if (mode === "locked") return;
+  startFollow("Pointer lock isn't available here, so the mouse follows your pointer and walls can't stop your real cursor.");
+  setTimeout(() => { if (mode === "follow") setHint(""); }, 3500);
+}
+document.addEventListener("pointerlockchange", () => {
+  if (document.pointerLockElement === cv) { mode = "locked"; pendX = pendY = 0; setHint(""); }
+  else if (mode === "locked") { mode = "idle"; setHint("Click the mat to take control again."); }
+});
+document.addEventListener("pointerlockerror", lockRefused);
+cv.addEventListener("pointerdown", e => {
+  if (e.pointerType === "touch") {
+    mode = "touch"; touchLast = { x: e.clientX, y: e.clientY }; cv.setPointerCapture(e.pointerId); setHint("");
+  } else if (mode === "idle" && lockable) requestLock();
+  else if (mode === "idle") startFollow();
+});
+cv.addEventListener("pointermove", e => {
+  if (e.pointerType === "touch") {
+    if (!touchLast) return;
+    pendX += (e.clientX - touchLast.x) / view.s; pendY += (e.clientY - touchLast.y) / view.s;
+    touchLast = { x: e.clientX, y: e.clientY };
+  } else if (mode === "follow") { const p = toWorld(e); target.x = p.x; target.y = p.y; }
+  moved = true;
+});
+document.addEventListener("mousemove", e => {
+  if (mode === "locked") { pendX += e.movementX / view.s; pendY += e.movementY / view.s; }
+});
+const endTouch = () => { touchLast = null; };
+cv.addEventListener("pointerup", endTouch);
+cv.addEventListener("pointercancel", endTouch);
+function feedInput() { // called once per physics frame
+  if (mode === "locked" || mode === "touch") {
+    target.x = player.x + pendX; target.y = player.y + pendY;
+    pendX = pendY = 0;
+  }
+}
+const sButtons = { weak: document.getElementById("sWeak"), medium: document.getElementById("sMedium"), strong: document.getElementById("sStrong") };
+for (const [k, btn] of Object.entries(sButtons)) btn.onclick = () => {
+  pushForce = F_REF * STRENGTH[k];
+  for (const [k2, b2] of Object.entries(sButtons)) b2.setAttribute("aria-pressed", String(k2 === k));
+};
+document.getElementById("bReset").onclick = () => { reset(); pendX = pendY = 0; };
+
+// ---------- drawing ----------
+let colors = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["mat", "matGrid", "matMajor", "static", "wall", "mouseBody", "mouseEdge"])
+    colors[k] = cs.getPropertyValue("--" + k).trim();
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
+function pathBox(b) {
+  const v = b.v; ctx.beginPath(); ctx.moveTo(v[0], v[1]);
+  for (let i = 1; i < 4; i++) ctx.lineTo(v[2 * i], v[2 * i + 1]);
+  ctx.closePath();
+}
+function draw() {
+  const { s, ox, oy, dpr } = view, px1 = 1 / s;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(dpr * s, 0, 0, dpr * s, dpr * ox, dpr * oy);
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+  ctx.fillStyle = colors.mat; ctx.fillRect(0, 0, W, H);
+  ctx.lineWidth = px1;
+  for (const [step, col] of [[10, colors.matGrid], [50, colors.matMajor]]) {
+    ctx.strokeStyle = col; ctx.beginPath();
+    for (let x = step; x < W; x += step) { ctx.moveTo(x + .5 * px1, 0); ctx.lineTo(x + .5 * px1, H); }
+    for (let y = step; y < H; y += step) { ctx.moveTo(0, y + .5 * px1); ctx.lineTo(W, y + .5 * px1); }
+    ctx.stroke();
+  }
+  for (const b of bodies) {
+    if (!b.isStatic) continue;
+    pathBox(b);
+    if (Math.min(b.hw, b.hh) < 1) { ctx.fillStyle = colors.wall; ctx.fill(); ctx.strokeStyle = colors.wall; ctx.lineWidth = px1; ctx.stroke(); }
+    else { ctx.fillStyle = colors.static; ctx.fill(); }
+  }
+  for (const b of bodies) {
+    if (b.kind !== "box") continue;
+    pathBox(b); ctx.fillStyle = b.color; ctx.globalAlpha = b.asleep ? 0.6 : 1; ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(0,0,0,.45)"; ctx.lineWidth = px1; ctx.stroke();
+  }
+  // the player: an arrow cursor whose tip pixel is the 1x1 collider
+  const p = player, tx = p.x - 0.5, ty = p.y - 0.5;
+  ctx.beginPath();
+  ctx.moveTo(tx, ty); ctx.lineTo(tx, ty + 15); ctx.lineTo(tx + 3.6, ty + 11.6); ctx.lineTo(tx + 6, ty + 17);
+  ctx.lineTo(tx + 8.2, ty + 16); ctx.lineTo(tx + 5.9, ty + 10.8); ctx.lineTo(tx + 10.6, ty + 10.8); ctx.closePath();
+  ctx.fillStyle = colors.mouseBody; ctx.fill();
+  ctx.strokeStyle = colors.mouseEdge; ctx.lineWidth = px1; ctx.lineJoin = "miter"; ctx.stroke();
+  // where your pointer actually is, when the mouse can't get there
+  const lag = Math.hypot(target.x - p.x, target.y - p.y);
+  if (mode === "follow" && lag > 1.5 && moved) {
+    ctx.strokeStyle = colors.wall; ctx.lineWidth = px1; ctx.setLineDash([3 * px1, 3 * px1]);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(target.x, target.y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(target.x, target.y, 4, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ---------- loop ----------
+// physics runs once per displayed frame with the real elapsed time, so the
+// cursor moves on every refresh at 60, 120, 144 Hz or whatever the display does
+let lastT = null, frame = 0, lastGap = 0, fpsT = 0, fpsN = 0, fps = 0;
+function loop(now) {
+  const dt = lastT === null ? 1 / 60 : (now - lastT) / 1000; lastT = now;
+  if (dt > 0) {
+    feedInput(); step(dt);
+    lastGap = Math.hypot(target.x - player.x, target.y - player.y);
+  }
+  draw();
+  fpsN++; fpsT += dt;
+  if (fpsT >= 0.5) { fps = fpsN / fpsT; fpsN = 0; fpsT = 0; }
+  if (++frame % 6 === 0) {
+    auditMain.textContent = overlapCount === 0 ? "0 overlaps" : `${overlapCount.toLocaleString()} overlaps found`;
+    auditMain.classList.toggle("bad", overlapCount > 0);
+    const boxes = bodies.filter(b => b.kind === "box"), awake = boxes.filter(b => !b.asleep).length;
+    // locked or touch: how much of the last frame's movement something blocked.
+    // following the real pointer: how far the mouse is behind it.
+    const what = mode === "follow" ? "lag" : "blocked";
+    auditSub.textContent = `${what} ${lastGap.toFixed(1)} px, ${awake} of ${boxes.length} awake, ${Math.round(fps)} fps`;
+  }
+  requestAnimationFrame(loop);
+}
+readColors(); reset(); resize();
+if (matchMedia("(pointer: coarse)").matches) setHint("Drag anywhere to move the mouse.");
+else if (!lockable) startFollow("Move your pointer over the mat. You are the mouse.");
+requestAnimationFrame(loop);
+</script>
+
+</body></html>
