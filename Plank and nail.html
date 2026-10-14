@@ -1,0 +1,963 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Plank and nail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* Layout: one screen. A framing site fills the middle; a status strip above it,
+   the timber controls and a one-line control guide below. */
+:root{
+  --bg:#E9ECEF; --ink:#1A1F24; --muted:#56606A; --line:#C3CBD2; --btn:#F7F8F9;
+  --ok:#2B7A57; --bad:#B83A2E; --warn:#C45A12;
+  --display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111417; --ink:#E4E8EC; --muted:#8D97A1; --line:#2A3037; --btn:#1A1F24;
+    --ok:#5DBF8F; --bad:#FF6B5B; --warn:#F08A4B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111417; --ink:#E4E8EC; --muted:#8D97A1; --line:#2A3037; --btn:#1A1F24;
+  --ok:#5DBF8F; --bad:#FF6B5B; --warn:#F08A4B; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);
+  display:flex;flex-direction:column;overflow:hidden;padding-inline:16px;
+  -webkit-user-select:none;user-select:none;
+}
+header,.under{width:100%;max-width:960px;margin:0 auto}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-block:12px 8px}
+h1{font-family:var(--display);font-weight:800;font-stretch:78%;font-size:1.45rem;margin:0;letter-spacing:.005em}
+#audit{text-align:right;line-height:1.25;font-variant-numeric:tabular-nums}
+#auditMain{font-weight:600;color:var(--ok)}
+#auditMain.bad{color:var(--bad)}
+#auditSub{font-size:.8rem;color:var(--muted)}
+#stage{flex:1;min-height:0;position:relative;border-radius:10px;overflow:hidden;max-width:960px;width:100%;margin:0 auto}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#toast{
+  position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:92%;
+  background:rgba(20,24,28,.88);color:#F2F4F6;font-size:.85rem;padding:8px 14px;border-radius:8px;
+  opacity:0;transition:opacity .2s;pointer-events:none;text-align:center;
+}
+#toast.show{opacity:1}
+.under{display:flex;flex-direction:column;gap:8px;padding-block:10px 12px}
+#status{font-variant-numeric:tabular-nums;font-size:.9rem;min-height:1.3em}
+#status .strain{color:var(--warn);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{
+  font:inherit;font-size:.88rem;font-weight:500;color:var(--ink);background:var(--btn);
+  border:1px solid var(--line);border-radius:8px;padding:9px 14px;min-height:42px;cursor:pointer;
+}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.spacer{flex:1}
+#help{font-size:.8rem;color:var(--muted);line-height:1.45;max-width:78ch}
+kbd{font-family:inherit;font-size:.75rem;font-weight:600;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--btn)}
+@media (prefers-reduced-motion: reduce){#toast{transition:none}}
+</style>
+
+<header>
+  <h1>Plank and nail</h1>
+  <div id="audit" aria-live="polite">
+    <div id="auditMain">0 overlaps</div>
+    <div id="auditSub">3 loose, 0 nailed</div>
+  </div>
+</header>
+<div id="stage">
+  <canvas id="cv" aria-label="3D framing site: a stud wall on a concrete slab with loose timber"></canvas>
+  <div id="toast" role="status"></div>
+</div>
+<div class="under">
+  <div id="status">Click a plank to pick it up.</div>
+  <div class="row">
+    <button id="bLong">New 2.4 m plank</button>
+    <button id="bNog">New 550 mm noggin</button>
+    <button id="bNail">Nail it <kbd>N</kbd></button>
+    <button id="bDrop">Let go <kbd>Space</kbd></button>
+    <span class="spacer"></span>
+    <button id="bReset">Reset site</button>
+  </div>
+  <div id="help">Move the mouse to carry, scroll to push it away or pull it in, <kbd>Q</kbd><kbd>E</kbd> <kbd>W</kbd><kbd>S</kbd> <kbd>A</kbd><kbd>D</kbd> to turn it, <kbd>R</kbd> to square up your hand. Nailing fixes a plank to whatever it's touching. Drag empty space to look around, scroll to zoom. The studs are 562 mm apart, so the 550 mm noggin is a tight fit.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+// ===== PHYSICS =====
+// Units: metres, kilograms, seconds. Every shape is a box (planks, studs, slab).
+const GRAV = -9.81;
+const G = 0.0005;        // gap contacts settle at (0.5 mm)
+const G_MIN = 0.0001;    // hard floor on separation during motion (0.1 mm)
+const PUSH_MAX = 0.1;    // m/s cap on the move-only push back out to G
+const H_MAX = 1 / 180;   // longest physics substep
+const DT_MAX = 1 / 20;   // a longer hitch only simulates this much
+const MU = 0.5, MU_HELD = 0.2;   // wood on wood; a held plank slides more easily
+const DENSITY = 500;     // softwood, kg/m^3
+const SLEEP_V = 0.02, SLEEP_T = 0.4, WAKE_V = 0.01, WAKE_IMP = 2.5;
+const MAX_V = 30, MAX_W = 40;
+const HAND_ACC = 40, HAND_ALPHA = 40;  // extra accel (m/s^2) and angular accel (rad/s^2) the hand can give
+const STRETCH_MAX = 0.4, ANGLE_MAX = 60 * Math.PI / 180, BREAK_T = 0.25;
+
+// ---------- small vector and quaternion helpers ----------
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const scl = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const nrm = a => { const l = len(a); return l > 0 ? scl(a, 1 / l) : [0, 0, 0]; };
+function perpBasis(n) { // two unit vectors perpendicular to n and each other
+  const t = Math.abs(n[0]) < 0.6 ? [1, 0, 0] : [0, 1, 0];
+  const t1 = nrm(cross(n, t)); return [t1, cross(n, t1)];
+}
+const qmul = (a, b) => [
+  a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+  a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+  a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+  a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
+const qconj = q => [-q[0], -q[1], -q[2], q[3]];
+function qaxis(axis, ang) { const s = Math.sin(ang / 2); return [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(ang / 2)]; }
+function qnorm(q) { const l = Math.hypot(q[0], q[1], q[2], q[3]); return [q[0] / l, q[1] / l, q[2] / l, q[3] / l]; }
+function qrot(q, v) { const t = scl(cross(q, v), 2); return add(add(v, scl(t, q[3])), cross(q, t)); }
+function qToAxisAngle(q) { // rotation vector (axis * angle), shortest way round
+  if (q[3] < 0) q = [-q[0], -q[1], -q[2], -q[3]];
+  const s = Math.hypot(q[0], q[1], q[2]);
+  if (s < 1e-12) return [0, 0, 0];
+  const ang = 2 * Math.atan2(s, q[3]);
+  return scl([q[0], q[1], q[2]], ang / s);
+}
+
+// ---------- bodies ----------
+let bodies = [], hold = null, nailedCount = 0;
+let overlapCount = 0, pairChecks = 0;
+function makeBody(p, q, he, kind) {
+  const b = { p: [...p], q: qnorm(q), v: [0, 0, 0], w: [0, 0, 0], he: [...he], kind,
+    isStatic: kind !== "plank", r: len(he), axes: null, verts: null, invM: 0, invIb: [0, 0, 0],
+    invIw: null, asleep: false, sleepT: 0, forced: false, di: -1, tLeft: 0, nails: [] };
+  if (!b.isStatic) setDynamic(b);
+  update(b);
+  return b;
+}
+function setDynamic(b) {
+  const [x, y, z] = b.he, m = DENSITY * 8 * x * y * z;
+  b.invM = 1 / m;
+  b.invIb = [3 / (m * (y * y + z * z)), 3 / (m * (x * x + z * z)), 3 / (m * (x * x + y * y))];
+}
+function freeze(b) { // nailed: from now on it's just a collider
+  b.isStatic = true; b.kind = "nailed"; b.invM = 0; b.invIb = [0, 0, 0];
+  b.v = [0, 0, 0]; b.w = [0, 0, 0]; b.asleep = false; update(b);
+}
+function update(b) {
+  const ax = [qrot(b.q, [1, 0, 0]), qrot(b.q, [0, 1, 0]), qrot(b.q, [0, 0, 1])];
+  b.axes = ax;
+  const vs = [];
+  for (let i = 0; i < 8; i++) {
+    let v = [...b.p];
+    for (let k = 0; k < 3; k++) v = add(v, scl(ax[k], ((i >> k) & 1 ? 1 : -1) * b.he[k]));
+    vs.push(v);
+  }
+  b.verts = vs;
+  // world inverse inertia R diag(invIb) R^T, row-major
+  const I = new Float64Array(9);
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    let s = 0;
+    for (let k = 0; k < 3; k++) s += ax[k][r] * b.invIb[k] * ax[k][c];
+    I[r * 3 + c] = s;
+  }
+  b.invIw = I;
+}
+const mat3v = (M, v) => [M[0] * v[0] + M[1] * v[1] + M[2] * v[2], M[3] * v[0] + M[4] * v[1] + M[5] * v[2], M[6] * v[0] + M[7] * v[1] + M[8] * v[2]];
+const speed = b => len(b.v) + len(b.w) * b.r;
+const EDGES = []; for (let i = 0; i < 8; i++) for (let k = 0; k < 3; k++) { const j = i | (1 << k); if (j !== i) EDGES.push([i, j]); }
+
+// ---------- geometry ----------
+const radius = (b, n) => b.he[0] * Math.abs(dot(b.axes[0], n)) + b.he[1] * Math.abs(dot(b.axes[1], n)) + b.he[2] * Math.abs(dot(b.axes[2], n));
+function testAxes(A, B) {
+  const out = [...A.axes, ...B.axes];
+  for (const a of A.axes) for (const c of B.axes) {
+    const x = cross(a, c), l = len(x);
+    if (l > 1e-6) out.push(scl(x, 1 / l));
+  }
+  return out;
+}
+// largest separation over the 15 box-box axes, with its axis pointing from A to B.
+// Negative for every axis means the interiors overlap.
+function bestAxis(A, B) {
+  let best = -Infinity, bn = [0, 1, 0];
+  const d = sub(B.p, A.p);
+  for (const a of testAxes(A, B)) {
+    const c = dot(d, a), sep = Math.abs(c) - radius(A, a) - radius(B, a);
+    if (sep > best) { best = sep; bn = c >= 0 ? a : scl(a, -1); }
+  }
+  return { sep: best, n: bn };
+}
+const overlaps = (A, B) => bestAxis(A, B).sep < 0;
+function pointBoxDist(p, B) {
+  const d = sub(p, B.p); let s = 0;
+  for (let k = 0; k < 3; k++) {
+    const x = dot(d, B.axes[k]), e = Math.abs(x) - B.he[k];
+    if (e > 0) s += e * e;
+  }
+  return Math.sqrt(s);
+}
+const clamp01 = t => t < 0 ? 0 : t > 1 ? 1 : t;
+function segSeg(p1, q1, p2, q2) { // closest points between two segments
+  const d1 = sub(q1, p1), d2 = sub(q2, p2), r = sub(p1, p2);
+  const a = dot(d1, d1), e = dot(d2, d2), f = dot(d2, r);
+  let s, t;
+  const c = dot(d1, r), b = dot(d1, d2), den = a * e - b * b;
+  s = den > 1e-12 ? clamp01((b * f - c * e) / den) : 0;
+  t = (b * s + f) / e;
+  if (t < 0) { t = 0; s = clamp01(-c / a); } else if (t > 1) { t = 1; s = clamp01((b - c) / a); }
+  const c1 = add(p1, scl(d1, s)), c2 = add(p2, scl(d2, t));
+  return { s, t, c1, c2, dist: len(sub(c2, c1)) };
+}
+// contact points between two nearby boxes: corners close to the other box, and
+// crossing edges (two planks laid across each other touch edge to edge)
+function contactPoints(A, B, d) {
+  const tol = 0.01, pts = [];
+  for (const p of A.verts) { const g = pointBoxDist(p, B); if (g <= d + tol) pts.push({ p, g }); }
+  for (const q of B.verts) { const g = pointBoxDist(q, A); if (g <= d + tol) pts.push({ p: q, g }); }
+  for (const [i, j] of EDGES) for (const [k, l] of EDGES) {
+    const r = segSeg(A.verts[i], A.verts[j], B.verts[k], B.verts[l]);
+    if (r.dist <= d + tol && r.s > 0.01 && r.s < 0.99 && r.t > 0.01 && r.t < 0.99)
+      pts.push({ p: scl(add(r.c1, r.c2), 0.5), g: r.dist });
+  }
+  if (pts.length <= 4) return pts;
+  // keep 4 that span the contact: the closest, then repeatedly the one farthest from those chosen
+  pts.sort((x, y) => x.g - y.g);
+  const keep = [pts[0]];
+  while (keep.length < 4) {
+    let bi = -1, bd = -1;
+    for (let i = 0; i < pts.length; i++) {
+      if (keep.includes(pts[i])) continue;
+      const dd = Math.min(...keep.map(k => len(sub(k.p, pts[i].p))));
+      if (dd > bd) { bd = dd; bi = i; }
+    }
+    if (bd < 0.002) break;
+    keep.push(pts[bi]);
+  }
+  return keep;
+}
+
+// ---------- the solve ----------
+// Velocities closest to what everything wants (gravity, the hand) such that no
+// contact approaches faster than its gap allows. One box-constrained QP per island
+// of touching bodies. Rows: n contact normal (>= 0), f contact friction
+// (|.| <= mu * normal), ml / ma the hand's linear and angular drive (limited to a
+// ball of radius force*h and torque*h, see solveIsland).
+let rows = [];
+const isFixed = b => b.isStatic || b.asleep;
+function wake(b) { if (b.asleep) { b.asleep = false; b.sleepT = 0; b.v = [0, 0, 0]; b.w = [0, 0, 0]; } }
+function jac(b, p, d) { const r = sub(p, b.p); return [d[0], d[1], d[2], ...cross(r, d)]; }
+function addContactRow(A, B, p, d, target, kind, normalOf, mu) {
+  const ja = jac(A, p, d).map(x => -x), jb = jac(B, p, d);
+  rows.push({ kind, ia: A.di, ib: B.di, A, B, ja, jb, target, push: target, lo: 0, hi: 0, normalOf, mu });
+}
+function buildRows(h) {
+  rows.length = 0;
+  for (let i = 0; i < bodies.length; i++) {
+    const A = bodies[i];
+    for (let j = i + 1; j < bodies.length; j++) {
+      const B = bodies[j];
+      if (isFixed(A) && isFixed(B)) continue;
+      const slop = 0.005 + (speed(A) + speed(B)) * h * 2;
+      if (len(sub(B.p, A.p)) - A.r - B.r > slop) continue;
+      const { sep, n } = bestAxis(A, B);
+      if (sep >= slop) continue;
+      const mu = (hold && (hold.b === A || hold.b === B)) ? MU_HELD : MU;
+      const [t1, t2] = perpBasis(n);
+      for (const c of contactPoints(A, B, Math.max(sep, 0))) {
+        const target = Math.min(0, -(c.g - G) / h);
+        const ni = rows.length;
+        addContactRow(A, B, c.p, n, target, "n", -1, mu);
+        if (c.g < G) rows[ni].push = Math.min(PUSH_MAX, (G - c.g) / h);
+        addContactRow(A, B, c.p, t1, 0, "f", ni, mu);
+        addContactRow(A, B, c.p, t2, 0, "f", ni, mu);
+      }
+    }
+  }
+}
+function addHandRows(h) {
+  if (!hold || hold.b.di < 0) return;
+  const b = hold.b, m = 1 / b.invM;
+  hold.fMax = m * (Math.abs(GRAV) + HAND_ACC) * h;
+  hold.tMax = HAND_ALPHA / Math.min(...b.invIb) * h;
+  const gp = add(b.p, qrot(b.q, hold.rLocal));
+  hold.arm = sub(gp, b.p);
+  // desired velocity of the grab point: close the gap fast but never faster than
+  // the hand's acceleration can stop in time (so it doesn't overshoot), plus the
+  // hand's own velocity
+  const e = sub(hold.hp, gp), el = len(e);
+  hold.vdes = el > 1e-9 ? add(scl(e, Math.min(1 / 0.04, Math.sqrt(2 * HAND_ACC / el))), hold.hv) : [...hold.hv];
+  const rv = qToAxisAngle(qmul(hold.hq, qconj(b.q))), th = len(rv);
+  hold.wdes = th > 1e-9 ? add(scl(rv, Math.min(1 / 0.04, Math.sqrt(2 * HAND_ALPHA / th))), hold.hw) : [...hold.hw];
+  const fl = hold.fMax / Math.sqrt(3), ta = hold.tMax / Math.sqrt(3); // first pass: cube inside the ball
+  for (const d of [[1, 0, 0], [0, 1, 0], [0, 0, 1]]) {
+    rows.push({ kind: "ml", ia: b.di, ib: -1, A: b, B: null, ja: [...d, ...cross(hold.arm, d)], jb: null,
+      target: dot(d, hold.vdes), lo: -fl, hi: fl, normalOf: -1, dir: d });
+    rows.push({ kind: "ma", ia: b.di, ib: -1, A: b, B: null, ja: [0, 0, 0, ...d], jb: null,
+      target: dot(d, hold.wdes), lo: -ta, hi: ta, normalOf: -1, dir: d });
+  }
+}
+function cholSolve(M, r, k) {
+  for (let j = 0; j < k; j++) {
+    let s = M[j * k + j];
+    for (let p = 0; p < j; p++) s -= M[j * k + p] ** 2;
+    const L = Math.sqrt(Math.max(s, 1e-300));
+    M[j * k + j] = L;
+    for (let i = j + 1; i < k; i++) {
+      let t = M[i * k + j];
+      for (let p = 0; p < j; p++) t -= M[i * k + p] * M[j * k + p];
+      M[i * k + j] = t / L;
+    }
+  }
+  const y = new Float64Array(k);
+  for (let i = 0; i < k; i++) { let t = r[i]; for (let p = 0; p < i; p++) t -= M[i * k + p] * y[p]; y[i] = t / M[i * k + i]; }
+  for (let i = k - 1; i >= 0; i--) { let t = y[i]; for (let p = i + 1; p < k; p++) t -= M[p * k + i] * y[p]; y[i] = t / M[i * k + i]; }
+  return y;
+}
+function boxQP(A, c, lo, hi, x, n) { // min 1/2 x'Ax - c'x, lo <= x <= hi (primal active set)
+  const fixed = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    x[i] = Math.min(hi[i], Math.max(lo[i], x[i]));
+    if (x[i] === lo[i] || x[i] === hi[i]) fixed[i] = 1;
+  }
+  let scale = 1e-12;
+  for (let i = 0; i < n; i++) scale = Math.max(scale, Math.abs(c[i]));
+  const tol = 1e-9 * scale;
+  let single = false;
+  for (let iter = 0; iter < 6 * n + 20; iter++) {
+    const F = [];
+    for (let i = 0; i < n; i++) if (!fixed[i]) F.push(i);
+    const k = F.length;
+    let y = null;
+    if (k > 0) {
+      const M = new Float64Array(k * k), r = new Float64Array(k);
+      for (let a = 0; a < k; a++) {
+        const i = F[a];
+        let t = c[i];
+        for (let j = 0; j < n; j++) if (fixed[j]) t -= A[i * n + j] * x[j];
+        r[a] = t;
+        for (let b = 0; b < k; b++) M[a * k + b] = A[i * n + F[b]];
+      }
+      y = cholSolve(M, r, k);
+    }
+    let alpha = 1, block = -1;
+    for (let a = 0; a < k; a++) {
+      const i = F[a], dx = y[a] - x[i];
+      if (dx < 0 && y[a] < lo[i]) { const t = (lo[i] - x[i]) / dx; if (t < alpha) { alpha = t; block = i; } }
+      if (dx > 0 && y[a] > hi[i]) { const t = (hi[i] - x[i]) / dx; if (t < alpha) { alpha = t; block = i; } }
+    }
+    for (let a = 0; a < k; a++) x[F[a]] += alpha * (y[a] - x[F[a]]);
+    if (block >= 0) {
+      if (alpha <= 1e-14) single = true;
+      for (let a = 0; a < k; a++) {
+        const i = F[a];
+        if (x[i] <= lo[i] + 1e-12 * (1 + Math.abs(lo[i]))) { x[i] = lo[i]; fixed[i] = 1; }
+        else if (x[i] >= hi[i] - 1e-12 * (1 + Math.abs(hi[i]))) { x[i] = hi[i]; fixed[i] = 1; }
+      }
+      continue;
+    }
+    let released = false, worst = -1, worstV = 0;
+    for (let i = 0; i < n; i++) {
+      if (!fixed[i] || lo[i] === hi[i]) continue;
+      let g = -c[i];
+      for (let j = 0; j < n; j++) g += A[i * n + j] * x[j];
+      const v = x[i] === lo[i] ? -g : x[i] === hi[i] ? g : 0;
+      if (v > tol) {
+        if (single) { if (v > worstV) { worstV = v; worst = i; } }
+        else { fixed[i] = 0; released = true; }
+      }
+    }
+    if (worst >= 0) { fixed[worst] = 0; released = true; }
+    if (!released) return;
+  }
+}
+function solveIsland(idx, dyn, h, pushPass) {
+  const n = idx.length;
+  if (n === 0) return;
+  const R = idx.map(i => rows[i]);
+  const local = new Map(idx.map((g, l) => [g, l]));
+  const A = new Float64Array(n * n), c = new Float64Array(n);
+  const sides = r => { const s = []; if (r.ia >= 0) s.push([r.ia, r.ja]); if (r.ib >= 0) s.push([r.ib, r.jb]); return s; };
+  const minv = (bi, J) => { const b = dyn[bi]; return [J[0] * b.invM, J[1] * b.invM, J[2] * b.invM, ...mat3v(b.invIw, [J[3], J[4], J[5]])]; };
+  function build() {
+    const S = R.map(sides), MS = S.map(ss => ss.map(([bi, J]) => [bi, minv(bi, J)]));
+    for (let i = 0; i < n; i++) {
+      let jv = 0;
+      for (const [bi, J] of S[i]) { const b = dyn[bi]; jv += J[0] * b.v[0] + J[1] * b.v[1] + J[2] * b.v[2] + J[3] * b.w[0] + J[4] * b.w[1] + J[5] * b.w[2]; }
+      const r = R[i];
+      c[i] = (pushPass ? (r.kind === "n" ? r.push : 0) : r.target) - jv;
+      for (let j = i; j < n; j++) {
+        let s = 0;
+        for (const [bi, J] of S[i]) for (const [bj, MJ] of MS[j]) {
+          if (bi !== bj) continue;
+          for (let q = 0; q < 6; q++) s += J[q] * MJ[q];
+        }
+        A[i * n + j] = s; A[j * n + i] = s;
+      }
+    }
+    for (let i = 0; i < n; i++) A[i * n + i] += 1e-9 * A[i * n + i] + 1e-14;
+  }
+  build();
+  const lo = new Float64Array(n), hi = new Float64Array(n), x = new Float64Array(n);
+  const groups = { ml: [], ma: [] };
+  for (let i = 0; i < n; i++) if (R[i].kind === "ml" || R[i].kind === "ma") groups[R[i].kind].push(i);
+  const passes = pushPass ? 1 : 4;
+  for (let pass = 0; pass < passes; pass++) {
+    for (let i = 0; i < n; i++) {
+      const r = R[i];
+      if (r.kind === "n") { lo[i] = 0; hi[i] = Infinity; }
+      else if (pushPass) { lo[i] = 0; hi[i] = 0; } // the push is frictionless and handless
+      else if (r.kind === "f") { const f = r.mu * x[local.get(r.normalOf)]; lo[i] = -f; hi[i] = f; }
+      else { lo[i] = r.lo; hi[i] = r.hi; }
+    }
+    boxQP(A, c, lo, hi, x, n);
+    if (pushPass || pass === passes - 1) continue;
+    // turn each hand drive to face the force (torque) it just used: full limit along
+    // it, only what's left of the ball across it. Converges to a true ball limit, so
+    // pushing flat out against a surface still lets the plank slide and turn along it.
+    let rebuilt = false;
+    for (const kind of ["ml", "ma"]) {
+      const g = groups[kind];
+      if (g.length !== 3) continue;
+      let M = [0, 0, 0];
+      for (const i of g) M = add(M, scl(R[i].dir, x[i]));
+      const Mm = len(M), lim = kind === "ml" ? hold.fMax : hold.tMax;
+      if (Mm < 1e-12 * lim) continue;
+      const u = scl(M, 1 / Mm), [e1, e2] = perpBasis(u);
+      const along = Math.min(Mm, lim), across = Math.sqrt(Math.max(0, lim * lim - along * along)) / Math.SQRT2;
+      [[u, lim, along], [e1, across, 0], [e2, across, 0]].forEach(([d, bound, x0], k) => {
+        const r = R[g[k]];
+        r.dir = d; r.lo = -bound; r.hi = bound; x[g[k]] = x0;
+        if (kind === "ml") { r.ja = [...d, ...cross(hold.arm, d)]; r.target = dot(d, hold.vdes); }
+        else { r.ja = [0, 0, 0, ...d]; r.target = dot(d, hold.wdes); }
+      });
+      rebuilt = true;
+    }
+    if (rebuilt) build();
+  }
+  if (!pushPass) {
+    // something pressing a sleeper harder than a few of its own weights wakes it
+    for (let i = 0; i < n; i++) {
+      const r = R[i];
+      if (r.kind !== "n" || x[i] <= 0) continue;
+      const S = r.A.asleep ? r.A : r.B.asleep ? r.B : null;
+      if (!S) continue;
+      const aw = S === r.A ? r.B : r.A;
+      if (!aw.isStatic && x[i] > WAKE_IMP * Math.abs(GRAV) * h / aw.invM) wake(S);
+    }
+    // how hard the hand is working, for the display
+    if (groups.ml.length === 3) {
+      let M = [0, 0, 0];
+      for (const i of groups.ml) M = add(M, scl(R[i].dir, x[i]));
+      hold.load = len(M) / hold.fMax;
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const l = x[i];
+    for (const [bi, J] of sides(R[i])) {
+      const b = dyn[bi], MJ = minv(bi, J);
+      b.v = add(b.v, scl([MJ[0], MJ[1], MJ[2]], l)); b.w = add(b.w, scl([MJ[3], MJ[4], MJ[5]], l));
+    }
+  }
+}
+function solveAll(dyn, h, pushPass) {
+  const par = dyn.map((_, i) => i);
+  const find = i => { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+  for (const r of rows) if (r.ia >= 0 && r.ib >= 0) par[find(r.ia)] = find(r.ib);
+  const groups = new Map();
+  rows.forEach((r, i) => {
+    const key = find(r.ia >= 0 ? r.ia : r.ib);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(i);
+  });
+  for (const idx of groups.values()) solveIsland(idx, dyn, h, pushPass);
+}
+
+// ---------- the mover: the only code that changes positions ----------
+// Two convex shapes are apart while some plane separates them. In 3D they can
+// start to overlap edge to edge with no corner involved, so instead of watching
+// corners we keep a separating plane. Candidates are the 15 box-box axes: planes
+// on the other box's faces (fixed), on this box's faces (they turn with it), and
+// across pairs of edges. For face planes every corner on the moving side has
+//   phi(t) >= phi0 + phi'0 t - M t^2 / 2
+// with phi'0 exact and M bounding the curvature from rotation, so a corner
+// pivoting in contact still gets full steps. Edge planes use a slope bound. Each
+// step uses whichever plane allows the longest move; all are provably safe.
+function safeTime(phi0, d1, M, rem) {
+  const floor = Math.min(G_MIN, phi0), C = phi0 - floor, a = 0.5 * M;
+  let s;
+  if (a < 1e-15) s = d1 >= 0 ? rem : C / -d1;
+  else s = (d1 + Math.sqrt(d1 * d1 + 4 * a * C)) / (2 * a);
+  return s < rem ? (s > 0 ? s : 0) : rem;
+}
+function stepLimit(b, o, rem) {
+  const v = b.v, w = b.w, wl = len(w), vl = len(v), w2 = wl * wl;
+  let best = 0;
+  // planes on o's faces: b's corners must stay outside
+  for (let k = 0; k < 3 && best < rem; k++) for (const sg of [1, -1]) {
+    const n = scl(o.axes[k], sg), hgt = dot(n, o.p) + o.he[k];
+    let s = rem;
+    for (const p of b.verts) {
+      const phi = dot(n, p) - hgt;
+      if (phi <= 0) { s = 0; break; }
+      const r = sub(p, b.p);
+      s = safeTime(phi, dot(n, add(v, cross(w, r))), w2 * len(r), s);
+      if (s <= best) break;
+    }
+    best = Math.max(best, s);
+  }
+  // planes on b's faces: o's corners must stay outside while b moves and turns
+  for (let k = 0; k < 3 && best < rem; k++) for (const sg of [1, -1]) {
+    const n = scl(b.axes[k], sg), wn = cross(w, n);
+    let s = rem;
+    for (const q of o.verts) {
+      const u = sub(q, b.p), phi = dot(n, u) - b.he[k];
+      if (phi <= 0) { s = 0; break; }
+      const M = w2 * (len(u) + vl * s) + 2 * wl * vl;
+      s = safeTime(phi, dot(wn, u) - dot(n, v), M, s);
+      if (s <= best) break;
+    }
+    best = Math.max(best, s);
+  }
+  // planes across an edge of b and an edge of o: slope-bounded
+  if (best < rem) {
+    const D0 = len(sub(o.p, b.p)) + b.r + o.r;
+    for (const eb of b.axes) for (const eo of o.axes) {
+      const x = cross(eb, eo), cl = len(x);
+      if (cl < 1e-3) continue;
+      const n = scl(x, 1 / cl), cdist = dot(sub(o.p, b.p), n);
+      const sep = Math.abs(cdist) - radius(b, n) - radius(o, n);
+      if (sep <= 0) continue;
+      const L = wl / cl * (D0 + vl * rem) + vl + wl * b.r;
+      const floor = Math.min(G_MIN, sep);
+      best = Math.max(best, L > 0 ? Math.min(rem, (sep - floor) / L) : rem);
+    }
+  }
+  return Math.min(best, rem);
+}
+function integ(b, t) {
+  b.p = add(b.p, scl(b.v, t));
+  const wl = len(b.w);
+  if (wl > 1e-12) b.q = qnorm(qmul(qaxis(scl(b.w, 1 / wl), wl * t), b.q));
+  update(b);
+}
+function nearby(b, reach) {
+  return bodies.filter(o => o !== b && len(sub(o.p, b.p)) - b.r - o.r <= reach);
+}
+function moveBody(b, h) { // returns time used
+  const sp = speed(b);
+  if (sp < 1e-12) return h;
+  const others = nearby(b, sp * h + 0.01);
+  let t = 0;
+  for (let it = 0; it < 16 && t < h - 1e-12; it++) {
+    const rem = h - t;
+    let s = rem;
+    for (const o of others) { s = Math.min(s, stepLimit(b, o, s)); if (s <= 0) break; }
+    if (s <= rem * 1e-6) return t;
+    const p0 = [...b.p], q0 = [...b.q];
+    integ(b, s);
+    if (others.some(o => overlaps(b, o))) { b.p = p0; b.q = q0; update(b); return t; } // belt and braces
+    t += s;
+  }
+  return t;
+}
+function moveAll(dyn, h) { // blocked bodies retry after the ones in front have moved
+  for (const b of dyn) b.tLeft = h;
+  for (let pass = 0; pass < dyn.length + 2; pass++) {
+    let progress = false;
+    for (const b of dyn) {
+      if (b.tLeft <= h * 1e-6) continue;
+      const used = moveBody(b, b.tLeft);
+      if (used > 0) { b.tLeft -= used; progress = true; }
+    }
+    if (!progress) break;
+  }
+}
+
+// ---------- step ----------
+function substep(h) {
+  for (const b of bodies) b.forced = false;
+  if (hold) { wake(hold.b); hold.b.forced = true; } // a body the hand holds never sleeps
+  for (const a of bodies) { // anything awake and moving wakes sleepers it touches
+    if (a.isStatic || a.asleep || speed(a) < WAKE_V) continue;
+    const reach = 0.005 + speed(a) * h * 2;
+    for (const o of bodies) {
+      if (!o.asleep || len(sub(o.p, a.p)) - o.r - a.r > reach) continue;
+      if (bestAxis(a, o).sep < reach) wake(o);
+    }
+  }
+  const dyn = bodies.filter(b => !b.isStatic && !b.asleep);
+  bodies.forEach(b => { b.di = -1; });
+  dyn.forEach((b, i) => { b.di = i; });
+  for (const b of dyn) {
+    b.v[1] += GRAV * h;
+    if (len(b.v) > MAX_V) b.v = scl(b.v, MAX_V / len(b.v));
+    if (len(b.w) > MAX_W) b.w = scl(b.w, MAX_W / len(b.w));
+  }
+  buildRows(h);
+  addHandRows(h);
+  solveAll(dyn, h, false);
+  let saved = null;
+  if (rows.some(r => r.kind === "n" && r.push > 0)) { // split impulse
+    saved = dyn.map(b => [[...b.v], [...b.w]]);
+    solveAll(dyn, h, true);
+  }
+  moveAll(dyn, h);
+  if (saved) dyn.forEach(b => { b.v = saved[b.di][0]; b.w = saved[b.di][1]; });
+  for (const b of dyn) {
+    if (speed(b) < SLEEP_V && !b.forced) b.sleepT += h; else b.sleepT = 0;
+    if (b.sleepT > SLEEP_T) { b.asleep = true; b.v = [0, 0, 0]; b.w = [0, 0, 0]; }
+  }
+}
+// one call per displayed frame, whatever the refresh rate
+function step(dt) {
+  dt = Math.min(dt, DT_MAX);
+  const nSub = Math.max(1, Math.ceil(dt / H_MAX - 1e-9)), h = dt / nSub;
+  for (let k = 0; k < nSub; k++) substep(h);
+  // grip breaks if the plank is stuck too far from the hand for a moment
+  let dropped = null;
+  if (hold) {
+    const st = handStretch();
+    if (st.dist > STRETCH_MAX || st.angle > ANGLE_MAX) hold.breakT += dt; else hold.breakT = 0;
+    if (hold.breakT > BREAK_T) { dropped = st; hold = null; }
+  }
+  for (let i = 0; i < bodies.length; i++)
+    for (let j = i + 1; j < bodies.length; j++) {
+      const A = bodies[i], B = bodies[j];
+      if (A.isStatic && B.isStatic) continue;
+      pairChecks++;
+      if (len(sub(B.p, A.p)) <= A.r + B.r && overlaps(A, B)) overlapCount++;
+    }
+  return dropped;
+}
+function handStretch() {
+  const b = hold.b, gp = add(b.p, qrot(b.q, hold.rLocal));
+  return { dist: len(sub(hold.hp, gp)), angle: len(qToAxisAngle(qmul(hold.hq, qconj(b.q)))) };
+}
+function grab(b, point) {
+  wake(b);
+  hold = { b, rLocal: qrot(qconj(b.q), sub(point, b.p)), hp: [...point], hq: [...b.q],
+    hv: [0, 0, 0], hw: [0, 0, 0], breakT: 0, load: 0, fMax: 0, tMax: 0, arm: [0, 0, 0], vdes: [0, 0, 0], wdes: [0, 0, 0] };
+}
+function release() { hold = null; }
+// nail a plank into whatever static structure it's touching
+function nailPoints(b) {
+  const pts = [];
+  for (const o of bodies) {
+    if (!o.isStatic || o === b || len(sub(o.p, b.p)) - o.r - b.r > 0.01) continue;
+    const { sep, n } = bestAxis(b, o);
+    if (sep > 0.003) continue;
+    for (const c of contactPoints(b, o, Math.max(sep, 0))) pts.push({ p: c.p, n });
+  }
+  if (pts.length === 0) return [];
+  // up to two nails, as far apart as possible
+  let bi = 0, bj = 0, bd = -1;
+  for (let i = 0; i < pts.length; i++) for (let j = i; j < pts.length; j++) {
+    const d = len(sub(pts[i].p, pts[j].p)); if (d > bd) { bd = d; bi = i; bj = j; }
+  }
+  return bd > 0.05 ? [pts[bi], pts[bj]] : [pts[bi]];
+}
+function nail(b) {
+  const pts = nailPoints(b);
+  if (!pts.length) return null;
+  if (hold && hold.b === b) hold = null;
+  freeze(b); nailedCount++;
+  // nail heads sit on the face of the plank opposite the joint
+  b.nails = pts.map(({ p, n }) => ({ head: sub(p, scl(n, 2 * radius(b, n))), n }));
+  for (const o of bodies) if (o.asleep && len(sub(o.p, b.p)) - o.r - b.r < 0.01) wake(o);
+  return b.nails;
+}
+
+// ---------- scene ----------
+const LONG = [1.2, 0.019, 0.07], NOGGIN = [0.281 - 0.006, 0.019, 0.07]; // 2400 and 550 mm long, 38 x 140 mm
+const MAX_LOOSE = 6;
+function looseCount() { return bodies.filter(b => b.kind === "plank").length; }
+function clearSpot(b) { return bodies.every(o => o === b || (o.isStatic && b.isStatic) || bestAxis(b, o).sep > 0.002); }
+function spawnPlank(he, p, q) {
+  if (looseCount() >= MAX_LOOSE) return null;
+  const b = makeBody(p, q || [0, 0, 0, 1], he, "plank");
+  for (let k = 0; k < 60 && !clearSpot(b); k++) { b.p[1] += 0.05; update(b); }
+  if (!clearSpot(b)) return null;
+  bodies.push(b);
+  return b;
+}
+function reset() {
+  bodies = []; hold = null; nailedCount = 0;
+  const st = (p, he, q) => bodies.push(makeBody(p, q || [0, 0, 0, 1], he, "static"));
+  st([0, -0.5, 0], [12, 0.5, 12]);                     // ground
+  st([0, 0.1, -0.2], [2.2, 0.1, 1.6], undefined);      // concrete slab, top at 0.2 m
+  bodies[bodies.length - 1].kind = "slab";
+  // a stud wall: plates 38 x 140, studs at 600 mm centres (562 mm clear between)
+  const wz = -1.2;
+  st([0, 0.219, wz], [1.819, 0.019, 0.07]);
+  st([0, 2.657, wz], [1.819, 0.019, 0.07]);
+  for (let i = -3; i <= 3; i++) st([i * 0.6, 1.438, wz], [0.019, 1.2, 0.07]);
+  for (const b of bodies) if (b.kind === "static" && b !== bodies[0]) b.kind = "frame";
+  bodies[0].kind = "ground";
+  // loose timber lying on the slab
+  spawnPlank(LONG, [0.1, 0.2 + 0.019 + G, 0.35]);
+  spawnPlank(NOGGIN, [-0.9, 0.2 + 0.019 + G, 0.8], qaxis([0, 1, 0], 0.5));
+  spawnPlank(NOGGIN, [0.9, 0.2 + 0.019 + G, 0.85], qaxis([0, 1, 0], -0.3));
+}
+
+// ===== UI =====
+const cv = document.getElementById("cv"), stage = document.getElementById("stage");
+const toastEl = document.getElementById("toast"), statusEl = document.getElementById("status");
+const auditMain = document.getElementById("auditMain"), auditSub = document.getElementById("auditSub");
+const SKY = 0xC9DCE8, GHOST = 0x2F8FE0;
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SKY); scene.fog = new THREE.Fog(SKY, 12, 28);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.03, 60);
+scene.add(new THREE.HemisphereLight(0xE8F0F6, 0x6E6046, 0.75));
+const sun = new THREE.DirectionalLight(0xFFF6E8, 0.85);
+sun.position.set(3.5, 7, 4); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 20 });
+sun.shadow.bias = -0.0005; sun.shadow.camera.updateProjectionMatrix(); scene.add(sun);
+
+// procedural softwood: pale with darker growth rings along the grain
+function woodTexture() {
+  const c = document.createElement("canvas"); c.width = 512; c.height = 64;
+  const g = c.getContext("2d");
+  g.fillStyle = "#E3C48F"; g.fillRect(0, 0, 512, 64);
+  let seed = 3; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let i = 0; i < 26; i++) {
+    const y0 = rnd() * 64, amp = 1 + rnd() * 3, f = 0.004 + rnd() * 0.01, ph = rnd() * 6;
+    g.strokeStyle = `rgba(150,105,55,${0.12 + rnd() * 0.22})`; g.lineWidth = 0.6 + rnd() * 1.6;
+    g.beginPath();
+    for (let x = 0; x <= 512; x += 8) { const y = y0 + Math.sin(x * f + ph) * amp; x ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.stroke();
+  }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  return t;
+}
+const wood = woodTexture();
+const MAT = {
+  plank: new THREE.MeshStandardMaterial({ map: wood, color: 0xFFFFFF, roughness: 0.85 }),
+  held: new THREE.MeshStandardMaterial({ map: wood, color: 0xFFF2DA, roughness: 0.85, emissive: 0x3A2A10, emissiveIntensity: 0.35 }),
+  frame: new THREE.MeshStandardMaterial({ map: wood, color: 0xD7B98C, roughness: 0.9 }),
+  nailed: new THREE.MeshStandardMaterial({ map: wood, color: 0xEAD2A6, roughness: 0.9 }),
+  slab: new THREE.MeshStandardMaterial({ color: 0xB7B4AC, roughness: 0.95 }),
+  ground: new THREE.MeshStandardMaterial({ color: 0x7F9963, roughness: 1 }),
+  nail: new THREE.MeshStandardMaterial({ color: 0x8E9399, metalness: 0.7, roughness: 0.35 }),
+  ghost: new THREE.MeshBasicMaterial({ color: GHOST, transparent: true, opacity: 0.18, depthWrite: false }),
+  ghostEdge: new THREE.LineBasicMaterial({ color: GHOST, transparent: true, opacity: 0.9 }),
+};
+let meshes = new Map(), nailMeshes = [];
+const ghost = new THREE.Group(); scene.add(ghost); ghost.visible = false;
+const handDot = new THREE.Mesh(new THREE.SphereGeometry(0.018, 16, 12), new THREE.MeshBasicMaterial({ color: GHOST }));
+const gripDot = new THREE.Mesh(new THREE.SphereGeometry(0.012, 12, 8), new THREE.MeshBasicMaterial({ color: 0x1A1F24 }));
+const tether = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
+  new THREE.LineDashedMaterial({ color: GHOST, dashSize: 0.03, gapSize: 0.02 }));
+scene.add(handDot, gripDot, tether);
+const nailGeo = new THREE.CylinderGeometry(0.0065, 0.0065, 0.004, 14);
+
+function meshFor(b) {
+  let m = meshes.get(b);
+  if (!m) {
+    m = new THREE.Mesh(new THREE.BoxGeometry(2 * b.he[0], 2 * b.he[1], 2 * b.he[2]), MAT.plank);
+    m.castShadow = b.kind !== "ground"; m.receiveShadow = true; m.userData.body = b;
+    scene.add(m); meshes.set(b, m);
+  }
+  return m;
+}
+function syncScene() {
+  for (const [b, m] of meshes) if (!bodies.includes(b)) { scene.remove(m); meshes.delete(b); }
+  for (const b of bodies) {
+    const m = meshFor(b);
+    m.position.set(b.p[0], b.p[1], b.p[2]); m.quaternion.set(b.q[0], b.q[1], b.q[2], b.q[3]);
+    m.material = hold && hold.b === b ? MAT.held : MAT[b.kind] || MAT.plank;
+  }
+  if (hold) {
+    if (ghost.userData.body !== hold.b) {
+      ghost.clear(); const b = hold.b, g = new THREE.BoxGeometry(2 * b.he[0], 2 * b.he[1], 2 * b.he[2]);
+      ghost.add(new THREE.Mesh(g, MAT.ghost), new THREE.LineSegments(new THREE.EdgesGeometry(g), MAT.ghostEdge));
+      ghost.userData.body = b;
+    }
+    // the ghost is where your hand is holding the plank; the plank is where physics lets it be
+    const c = sub(hold.hp, qrot(hold.hq, hold.rLocal));
+    ghost.position.set(c[0], c[1], c[2]); ghost.quaternion.set(hold.hq[0], hold.hq[1], hold.hq[2], hold.hq[3]);
+    const gp = add(hold.b.p, qrot(hold.b.q, hold.rLocal));
+    handDot.position.set(hold.hp[0], hold.hp[1], hold.hp[2]); gripDot.position.set(gp[0], gp[1], gp[2]);
+    tether.geometry.setFromPoints([gripDot.position, handDot.position]); tether.computeLineDistances();
+    const st = handStretch();
+    ghost.visible = st.dist > 0.004 || st.angle > 0.01;
+    handDot.visible = gripDot.visible = true; tether.visible = st.dist > 0.004;
+  } else { ghost.visible = handDot.visible = gripDot.visible = tether.visible = false; }
+}
+function addNailMeshes(nails) {
+  for (const { head, n } of nails) {
+    const m = new THREE.Mesh(nailGeo, MAT.nail);
+    m.position.set(head[0], head[1], head[2]);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(n[0], n[1], n[2]));
+    m.castShadow = true; scene.add(m); nailMeshes.push(m);
+  }
+}
+
+// ---------- camera ----------
+const orbit = { target: new THREE.Vector3(0, 1.1, -0.5), r: 4.6, yaw: 0.42, pitch: 0.3 };
+function placeCamera() {
+  const { target, r, yaw, pitch } = orbit;
+  camera.position.set(target.x + r * Math.cos(pitch) * Math.sin(yaw), target.y + r * Math.sin(pitch), target.z + r * Math.cos(pitch) * Math.cos(yaw));
+  camera.lookAt(target);
+}
+function resize() {
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / Math.max(1, r.height); camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+// ---------- input: a mouse-and-keyboard stand-in for a VR hand ----------
+const ndc = new THREE.Vector2(), ray = new THREE.Raycaster();
+let depth = 2, orbiting = null, keys = new Set();
+function setNdc(e) { const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
+function pickPlank() {
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects([...meshes.values()].filter(m => m.userData.body.kind === "plank"))[0];
+  return hit ? { b: hit.object.userData.body, point: [hit.point.x, hit.point.y, hit.point.z] } : null;
+}
+function handFromPointer() { // the hand sits on the pointer's ray at the current depth from the camera
+  ray.setFromCamera(ndc, camera);
+  const f = new THREE.Vector3(); camera.getWorldDirection(f);
+  const d = ray.ray.direction, t = depth / Math.max(0.05, d.dot(f));
+  return [camera.position.x + d.x * t, camera.position.y + d.y * t, camera.position.z + d.z * t];
+}
+let handTarget = null;
+cv.addEventListener("contextmenu", e => e.preventDefault());
+cv.addEventListener("pointerdown", e => {
+  setNdc(e); cv.setPointerCapture(e.pointerId);
+  if (e.button === 0 && hold) { release(); return; }
+  if (e.button === 0) {
+    const hit = pickPlank();
+    if (hit) {
+      grab(hit.b, hit.point);
+      const f = new THREE.Vector3(); camera.getWorldDirection(f);
+      depth = new THREE.Vector3(...hit.point).sub(camera.position).dot(f);
+      handTarget = [...hit.point];
+      return;
+    }
+  }
+  orbiting = { x: e.clientX, y: e.clientY };
+});
+cv.addEventListener("pointermove", e => {
+  setNdc(e);
+  if (orbiting) {
+    orbit.yaw -= (e.clientX - orbiting.x) * 0.006;
+    orbit.pitch = Math.max(-0.1, Math.min(1.35, orbit.pitch + (e.clientY - orbiting.y) * 0.006));
+    orbiting = { x: e.clientX, y: e.clientY }; placeCamera();
+  } else if (hold) handTarget = handFromPointer();
+  else cv.style.cursor = pickPlank() ? "grab" : "default";
+});
+const endOrbit = () => { orbiting = null; };
+cv.addEventListener("pointerup", endOrbit); cv.addEventListener("pointercancel", endOrbit);
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  if (hold) { depth = Math.max(0.4, Math.min(12, depth * Math.exp(-e.deltaY * 0.0012))); handTarget = handFromPointer(); }
+  else { orbit.r = Math.max(1.5, Math.min(12, orbit.r * Math.exp(e.deltaY * 0.001))); placeCamera(); }
+}, { passive: false });
+const KEYS = "qewsadr";
+window.addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if (k === " ") { e.preventDefault(); release(); return; }
+  if (k === "n") { doNail(); return; }
+  if (k === "r" && hold) { squareUp(); return; }
+  if (KEYS.includes(k) && k.length === 1) keys.add(k);
+});
+window.addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
+window.addEventListener("blur", () => keys.clear());
+function squareUp() { // turn the hand to the nearest right-angled orientation
+  const b = hold.b, m = new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion(...hold.hq));
+  const cols = [0, 1, 2].map(i => new THREE.Vector3().setFromMatrixColumn(m, i));
+  const snap = v => { const a = [Math.abs(v.x), Math.abs(v.y), Math.abs(v.z)], i = a.indexOf(Math.max(...a));
+    const s = new THREE.Vector3(); s.setComponent(i, Math.sign(v.getComponent(i)) || 1); return s; };
+  const x = snap(cols[0]); let y = snap(cols[1]);
+  if (Math.abs(x.dot(y)) > 0.5) y = snap(cols[2]).cross(x);
+  const z = new THREE.Vector3().crossVectors(x, y);
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+  hold.hq = [q.x, q.y, q.z, q.w];
+  void b;
+}
+const TURN = 1.4; // rad/s while a key is held
+function turnHand(dt) {
+  if (!hold) return;
+  const f = new THREE.Vector3(); camera.getWorldDirection(f);
+  const right = new THREE.Vector3().crossVectors(f, camera.up).normalize();
+  const axes = { q: [0, 1, 0], e: [0, -1, 0], w: right.toArray().map(v => -v), s: right.toArray(), a: f.toArray(), d: f.toArray().map(v => -v) };
+  let w = [0, 0, 0];
+  for (const k of keys) if (axes[k]) w = add(w, scl(axes[k], TURN));
+  hold.hw = w;
+  const wl = len(w);
+  if (wl > 0) hold.hq = qnorm(qmul(qaxis(scl(w, 1 / wl), wl * dt), hold.hq));
+}
+
+// ---------- actions ----------
+let toastTimer = 0;
+function toast(msg) {
+  toastEl.textContent = msg; toastEl.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2600);
+}
+function doNail() {
+  const target = hold ? hold.b : (pickPlank() || {}).b;
+  if (!target) { toast("Hold a plank, or point at one, to nail it."); return; }
+  const nails = nail(target);
+  if (!nails) { toast("Nothing to nail into. Press the plank against the frame, the slab or a nailed plank first."); return; }
+  addNailMeshes(nails);
+  toast(nails.length === 2 ? "Nailed in two places. It's part of the frame now." : "Nailed. It's part of the frame now.");
+}
+function newPlank(he) {
+  if (looseCount() >= MAX_LOOSE) { toast(`That's ${MAX_LOOSE} loose pieces. Nail some in first.`); return; }
+  const b = spawnPlank(he, [-0.4 + Math.random() * 0.8, 0.5, 0.7 + Math.random() * 0.3], qaxis([0, 1, 0], (Math.random() - 0.5) * 0.6));
+  if (!b) toast("No clear spot on the slab for a new piece.");
+}
+// a button clicked with the mouse gives focus back, so Space and N keep driving the hand
+for (const b of document.querySelectorAll("button")) b.addEventListener("pointerup", () => b.blur());
+document.getElementById("bLong").onclick = () => newPlank(LONG);
+document.getElementById("bNog").onclick = () => newPlank(NOGGIN);
+document.getElementById("bNail").onclick = doNail;
+document.getElementById("bDrop").onclick = () => release();
+document.getElementById("bReset").onclick = () => {
+  reset(); for (const m of nailMeshes) scene.remove(m); nailMeshes = []; overlapCount = 0; pairChecks = 0;
+};
+
+// ---------- loop ----------
+let lastT = null, frame = 0;
+function loop(now) {
+  const dt = lastT === null ? 1 / 60 : Math.max(1e-4, (now - lastT) / 1000); lastT = now;
+  if (hold) {
+    turnHand(dt);
+    if (handTarget) { const prev = hold.hp; hold.hp = [...handTarget]; hold.hv = scl(sub(hold.hp, prev), 1 / dt); }
+  }
+  const dropped = step(dt);
+  if (dropped) toast(`Let go: the plank was stuck ${Math.round(dropped.dist * 100)} cm${dropped.angle > ANGLE_MAX ? " and badly twisted" : ""} from your hand.`);
+  syncScene();
+  renderer.render(scene, camera);
+  if (++frame % 6 === 0) {
+    auditMain.textContent = overlapCount === 0 ? "0 overlaps" : `${overlapCount.toLocaleString()} overlaps found`;
+    auditMain.classList.toggle("bad", overlapCount > 0);
+    auditSub.textContent = `${looseCount()} loose, ${nailedCount} nailed, ${bodies.filter(b => b.kind === "plank" && !b.asleep).length} awake`;
+    if (hold) {
+      const st = handStretch(), load = Math.round(Math.min(1, hold.load) * 100);
+      statusEl.innerHTML = `Holding a ${hold.b.he[0] > 1 ? "2.4 m plank" : "550 mm noggin"}. Hand is ${(st.dist * 100).toFixed(1)} cm and ${(st.angle * 180 / Math.PI).toFixed(0)}° from it, effort ` +
+        `<span class="${load > 90 ? "strain" : ""}">${load}%</span>. The grip breaks at ${STRETCH_MAX * 100} cm or ${Math.round(ANGLE_MAX * 180 / Math.PI)}°.`;
+    } else statusEl.textContent = "Click a plank to pick it up.";
+  }
+  requestAnimationFrame(loop);
+}
+reset(); placeCamera(); resize();
+if (matchMedia("(pointer: coarse)").matches) toast("This prototype needs a mouse and keyboard.");
+requestAnimationFrame(loop);
+</script>
+
+</body></html>
